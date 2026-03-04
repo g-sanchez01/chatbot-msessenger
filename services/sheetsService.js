@@ -7,7 +7,7 @@ const states = {} // Almacenar datos en memoria.
 
 // Configuracion de google sheets
 const auth = new google.auth.GoogleAuth({
-    keyFile: creds, // archivo que descargaste
+    credentials: creds, // archivo que descargaste
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 })
 
