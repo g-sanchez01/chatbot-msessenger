@@ -1,10 +1,12 @@
 import { google } from "googleapis"
 import fs from "fs"
 
+const creds = JSON.parse(process.env.GOOGLE_SHEETS_KEY_JSON);
+
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(fs.readFileSync("./chatbot-messenger.json")),
+  credentials: creds, // usamos la variable de entorno directamente
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-})
+});
 
 const sheets = google.sheets({ version: "v4", auth })
 
