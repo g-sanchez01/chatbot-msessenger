@@ -2,12 +2,12 @@ import { google } from "googleapis"
 import dotenv from "dotenv"
 
 dotenv.config()
-
+const creds = JSON.parse(process.env.GOOGLE_SHEETS_KEY_JSON);
 const states = {} // Almacenar datos en memoria.
 
 // Configuracion de google sheets
 const auth = new google.auth.GoogleAuth({
-    keyFile: "chatbot-messenger.json", // archivo que descargaste
+    keyFile: creds, // archivo que descargaste
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 })
 
