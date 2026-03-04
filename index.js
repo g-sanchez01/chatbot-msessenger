@@ -13,7 +13,7 @@ app.use(express.json())
 app.use('/webhook', webhookRoutes)
 
 // Definir puerto
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 8080;
 
 // Arrancar app
 app.listen(PORT, () => {
