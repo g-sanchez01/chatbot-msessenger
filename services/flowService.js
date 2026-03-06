@@ -30,4 +30,11 @@ export const processMessage = async (psid, message) => {
             leadActualizado.telefono
         )
     }
+
+    console.log("Lead Actualizado:", {
+        nombre: leadActualizado.nombre,
+        telefono: leadActualizado.telefono,
+        localidad: leadActualizado.localidad,
+        guardado: leadActualizado.guardado || false
+    })
 }
