@@ -1,5 +1,5 @@
 import { getLead, updateLead, saveLead } from "./sheetsService.js"
-import { extractData } from "../models/model.js"
+import { extractData } from "../models/stateModel.js"
 
 export const processMessage = async (psid, message) => {
 
