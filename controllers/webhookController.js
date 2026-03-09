@@ -2,6 +2,8 @@ import { processMessage } from "../services/flowService.js";
 
 export const handleWebhook = async (req, res) => {
 
+    console.log("Ejecutando Controller...")
+
     try {
 
         // =================================================
