@@ -30,29 +30,12 @@ export async function handleWebhook(req, res) {
         console.error("Error en webhook:", error);
         res.sendStatus(200); // siempre responder 200 a Meta
     }
-
-  
-
-  for (const entry of entries) {
-    // Leer mensajes normales o standby (IA de Meta dueña del hilo)
-    const events = entry.messaging || entry.standby || [];
-
-    for (const event of events) {
-        if (event.message && event.message.text) {
-            const data = parseLead(event.message.text);
-            const lead = new Lead(data.nombre, data.telefono, data.ciudad);
-
-            await saveLeadToSheets(lead);
-        }
-    }
-}
-    res.sendStatus(200);
 }
 
 // Para verificación de webhook de Meta
 export function verifyWebhook(req, res) {
     console.log("Verificando Webhook...")
-    
+
     const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];
