@@ -1,6 +1,8 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
 
+const userLeads = {}; // estado por PSID
+
 export async function handleWebhook(req, res) {
     console.log("Entrando al Controller...")
     //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
