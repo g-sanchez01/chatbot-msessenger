@@ -9,6 +9,9 @@ export const handleWebhook = async (req, res) => {
         // =================================================
         // 1️⃣ VERIFICACIÓN DEL WEBHOOK (cuando lo configuras en Meta)
         // =================================================
+
+        const metodo = req.method
+        console.log("Metodo: ",metodo)
         if (req.method === "GET") {
 
             const metodo = req.method
