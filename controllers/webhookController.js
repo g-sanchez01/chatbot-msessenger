@@ -4,7 +4,7 @@ import { Lead } from "../models/leadModel.js";
 
 export async function handleWebhook(req, res) {
     console.log("Entrando al Controller...")
-    console.log("Webhook body:", JSON.stringify(req.body, null, 2));
+    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
     try {
         const entries = req.body.entry || [];
 
