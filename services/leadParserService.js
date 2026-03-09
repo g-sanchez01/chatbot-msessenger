@@ -1,4 +1,5 @@
 export function parseLead(text) {
+    console.log("Parseando...")
     const data = {};
     const regexNombre = /Nombre:\s*([^,]+)/i;
     const regexTel = /Tel(?:éfono)?:\s*(\d+)/i;

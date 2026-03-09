@@ -18,9 +18,11 @@ export async function handleWebhook(req, res) {
                     const data = parseLead(event.message.text);
                     console.log("Datos: ", data)
                     const lead = new Lead(data.nombre, data.telefono, data.ciudad);
+                    console.log("Datos guardados...: ", lead)
 
                     await saveLeadToSheets(lead);
-                    console.log("Datos subidos: ", lead)
+                    console.log("Datos sunidos a sheets")
+                    
                 }
             }
         }
