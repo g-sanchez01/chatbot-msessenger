@@ -17,12 +17,12 @@ export async function handleWebhook(req, res) {
         const psid = event.sender.id;
 
         if (!userLeads[psid]) {
+          // Crear estado inicial sin ignorar el primer mensaje
           userLeads[psid] = {
             lead: new Lead(),
             waitingFor: "nombre" // primer pregunta
           };
-          // enviar mensaje a usuario: "Hola, ¿cuál es tu nombre?"
-          continue;
+          console.log("Nuevo usuario, esperando nombre...");
         }
 
         const state = userLeads[psid];
@@ -57,6 +57,7 @@ export async function handleWebhook(req, res) {
           if (ciudad) {
             lead.ciudad = ciudad;
             console.log("Ciudad recibida:", lead.ciudad);
+            // Todos los datos completos, guardar en Sheets
             await saveLeadToSheets(lead);
             delete userLeads[psid];
             // enviar mensaje: "Gracias, tus datos fueron guardados"
@@ -70,7 +71,7 @@ export async function handleWebhook(req, res) {
     res.sendStatus(200);
   } catch (error) {
     console.error("Error en webhook:", error);
-    res.sendStatus(200);
+    res.sendStatus(200); // siempre responder 200 a Meta
   }
 }
 
