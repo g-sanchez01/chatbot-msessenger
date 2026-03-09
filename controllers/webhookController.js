@@ -30,6 +30,8 @@ export async function handleWebhook(req, res) {
 
                 const state = userLeads[psid] || (userLeads[psid] = { lead: new Lead(), lastIAQuestion: null });
                 const lead = state.lead; // ya seguro que existe
+                console.log("state: ", state)
+                console.log("lead: ", lead)
 
                 // Detectar si el mensaje recibido es de la IA preguntando por un dato
                 if (event.message.is_echo && event.message.text) {
@@ -66,7 +68,7 @@ export async function handleWebhook(req, res) {
                         console.log("Todos los datos guardados en Sheets");
                     }
                     } else {
-                    console.log(`Mensaje ignorado, no es un ${field} válido:`, text);
+                        console.log(`Mensaje ignorado, no es un ${field} válido:`, text);
                     }
                 }
             }
