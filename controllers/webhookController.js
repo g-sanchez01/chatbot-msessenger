@@ -31,11 +31,16 @@ export async function handleWebhook(req, res) {
         const lead = estadoUsuario.lead;
         console.log("Estado usuario: ", lead)
 
+        const mensajeParse = event.message.text.toLowerCase()
+        console.log(mensajeParse)
+
         // Detectar cuál es la pregunta de la IA por el contenido del mensaje
-        if (/nombre/i.test(event.message.text)) {
+        if (mensajeParse.includes("nombre")) {
           estadoUsuario.waitingFor = "nombre";
           console.log("IA preguntó por el nombre");
           continue; // no procesamos la respuesta todavía
+        } else {
+            console.log("La IA no pregunto por el nombre")
         }
 
         // Solo guardar la respuesta si estamos esperando un dato
