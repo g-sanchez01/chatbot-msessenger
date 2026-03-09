@@ -5,7 +5,12 @@ const userLeads = {}; // estado por PSID
 
 export async function handleWebhook(req, res) {
 <<<<<<< HEAD
+<<<<<<< HEAD
     console.log("Ejecutando controller...")
+=======
+    console.log("Entrando al Controller...")
+    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
+>>>>>>> parent of 481d6dc (parser)
 =======
     console.log("Entrando al Controller...")
     //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
@@ -20,6 +25,7 @@ export async function handleWebhook(req, res) {
                 if (!event.message || !event.message.text) continue;
 
                 const psid = event.sender.id;
+<<<<<<< HEAD
 <<<<<<< HEAD
                 const text = event.message.text.trim();
 
@@ -76,6 +82,9 @@ export async function handleWebhook(req, res) {
                     }
 =======
 
+=======
+
+>>>>>>> parent of 481d6dc (parser)
                 if (!userLeads[psid]) {
                     userLeads[psid] = {
                         lead: new Lead(),
@@ -109,6 +118,9 @@ export async function handleWebhook(req, res) {
                     await saveLeadToSheets(lead);
                     delete userLeads[psid];
                     // enviar mensaje: "Gracias, tus datos fueron guardados"
+<<<<<<< HEAD
+>>>>>>> parent of 481d6dc (parser)
+=======
 >>>>>>> parent of 481d6dc (parser)
                 }
             }
@@ -118,7 +130,11 @@ export async function handleWebhook(req, res) {
     } catch (error) {
         console.error("Error en webhook:", error);
 <<<<<<< HEAD
+<<<<<<< HEAD
         res.sendStatus(200);
+=======
+        res.sendStatus(200); // siempre responder 200 a Meta
+>>>>>>> parent of 481d6dc (parser)
 =======
         res.sendStatus(200); // siempre responder 200 a Meta
 >>>>>>> parent of 481d6dc (parser)
