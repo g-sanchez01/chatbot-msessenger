@@ -1,106 +1,69 @@
-import { processMessage } from "../services/flowService.js";
+import { parseLead } from "../services/leadParserService.js";
+import { saveLeadToSheets } from "../services/sheetsService.js";
+import { Lead } from "../models/leadModel.js";
 
-export const handleWebhook = async (req, res) => {
-
-    console.log("Ejecutando Controller...")
-
+export async function handleWebhook(req, res) {
+    console.log("Entrando al Controller...")
+    console.log("Webhook body:", JSON.stringify(req.body, null, 2));
     try {
+        const entries = req.body.entry || [];
 
-        // =================================================
-        // 1️⃣ VERIFICACIÓN DEL WEBHOOK (cuando lo configuras en Meta)
-        // =================================================
+         for (const entry of entries) {
+            // Leer mensajes normales o standby (IA de Meta dueña del hilo)
+            const events = entry.messaging || entry.standby || [];
 
-        const metodo = req.method
-        console.log("Metodo: ",metodo)
-        if (req.method === "GET") {
+            for (const event of events) {
+                if (event.message && event.message.text) { // Solo mensajes que contienen texto
+                    // Analizar o guardar segun la intención
+                    const data = parseLead(event.message.text);
+                    console.log("Datos: ", data)
+                    const lead = new Lead(data.nombre, data.telefono, data.ciudad);
 
-            const metodo = req.method
-            console.log(metodo)
-
-            const mode = req.query["hub.mode"];
-            const token = req.query["hub.verify_token"];
-            const challenge = req.query["hub.challenge"];
-
-            // Meta envía un token para verificar el webhook
-            if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
-
-                console.log("Webhook verificado correctamente ✅");
-
-                // Debemos devolver el challenge
-                return res.status(200).send(challenge);
-
-            }
-
-            console.log("Webhook no autorizado ❌");
-            return res.sendStatus(403);
-        }
-
-        // =================================================
-        // 2️⃣ EVENTOS DE MENSAJES
-        // =================================================
-        if (req.method === "POST") {
-
-            // Verificar que el evento provenga de Messenger
-            if (req.body.object !== "page") {
-                return res.sendStatus(404);
-            }
-
-            const entries = req.body.entry || [];
-            console.log(entries)
-
-            for (const entry of entries) {
-
-                const events = entry.messaging || [];
-
-                for (const event of events) {
-
-                    // Ignorar eventos sin mensaje
-                    if (!event.message) continue;
-
-                    // Ignorar mensajes enviados por el propio bot
-                    if (event.message.is_echo) continue;
-
-                    const psid = event?.sender?.id;
-                    const message = event?.message?.text;
-
-                    if (!psid || !message) continue;
-
-                    const text = message.trim();
-
-                    console.log(`📩 Usuario ${psid}: ${text}`);
-
-                    try {
-
-                        console.log("1. mensaje recibido")
-                        // Aquí enviamos el mensaje al flujo del bot
-                        await processMessage(psid, text);
-
-                        console.log("2. proceso terminado")
-
-                    } catch (error) {
-
-                        console.error("Error procesando mensaje:", error);
-
-                    }
-
+                    await saveLeadToSheets(lead);
+                    console.log("Datos subidos: ", lead)
                 }
-
             }
-
-            // IMPORTANTE:
-            // Messenger necesita siempre un 200
-            // o reenviará el evento muchas veces
-
-            return res.sendStatus(200);
-
         }
 
-        return res.sendStatus(405);
-
+        res.sendStatus(200);
     } catch (error) {
-
-        console.error("Error general en webhook:", error);
-        return res.sendStatus(500);
-
+        console.error("Error en webhook:", error);
+        res.sendStatus(200); // siempre responder 200 a Meta
     }
-};
+
+  
+
+  for (const entry of entries) {
+    // Leer mensajes normales o standby (IA de Meta dueña del hilo)
+    const events = entry.messaging || entry.standby || [];
+
+    for (const event of events) {
+        if (event.message && event.message.text) {
+            const data = parseLead(event.message.text);
+            const lead = new Lead(data.nombre, data.telefono, data.ciudad);
+
+            await saveLeadToSheets(lead);
+        }
+    }
+}
+    res.sendStatus(200);
+}
+
+// Para verificación de webhook de Meta
+export function verifyWebhook(req, res) {
+    console.log("Verificando Webhook...")
+    
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+
+    if (mode && token) {
+        if (mode === "subscribe" && token === VERIFY_TOKEN) {
+            console.log("Webhook verificado!");
+            res.status(200).send(challenge);
+        } else {
+            res.sendStatus(403);
+        }
+    }
+}

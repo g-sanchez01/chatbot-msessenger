@@ -1,12 +1,12 @@
-import express from "express"
-import { handleWebhook } from "../controllers/webhookController.js"
+import express from "express";
+import { handleWebhook, verifyWebhook } from "../controllers/webhookController.js";
 
-const router = express.Router()
+const router = express.Router();
 
-// Verificación del webhook
-router.get("/", handleWebhook)
+// Ruta para que Meta verifique el webhook (GET)
+router.get("/", verifyWebhook);
 
-// Recepción de eventos
-router.post("/", handleWebhook)
+// Ruta donde Meta enviará los eventos (POST)
+router.post("/", handleWebhook);
 
-export default router
+export default router;
