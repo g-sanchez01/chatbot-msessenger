@@ -28,9 +28,8 @@ export async function handleWebhook(req, res) {
                     continue; // aquí salimos y no intentamos usar lead todavía
                 }
 
-                const state = userLeads[psid] || (userLeads[psid] = { lead: new Lead(), lastIAQuestion: null });
+                const state = userLeads[psid]
                 const lead = state.lead; // ya seguro que existe
-                console.log("state: ", state)
                 console.log("lead: ", lead)
 
                 // Detectar si el mensaje recibido es de la IA preguntando por un dato
