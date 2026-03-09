@@ -1,127 +1,69 @@
-// sheetsService.js
 import { google } from "googleapis"
-import dotenv from "dotenv"
 
-dotenv.config()
+// =============================
+// CONFIGURAR AUTENTICACIÓN
+// =============================
 
-const creds = JSON.parse(process.env.GOOGLE_SHEETS_KEY_JSON)
+// Creamos un cliente de autenticación usando
+// la cuenta de servicio de Google
 
-// ================= MEMORIA TEMPORAL DE LEADS =================
-export const leads = {}
+const auth = new google.auth.JWT(
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    null,
+    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    ["https://www.googleapis.com/auth/spreadsheets"]
+)
 
-// ================= GOOGLE SHEETS CONFIG =================
-const auth = new google.auth.GoogleAuth({
-    credentials: creds,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-})
-
+// Creamos cliente para usar la API de Google Sheets
 const sheets = google.sheets({ version: "v4", auth })
 
-// ================== LEADS EN MEMORIA ===================
+// ID del documento de Google Sheets
+const spreadsheetId = process.env.GOOGLE_SHEETS_ID
 
-// obtener lead actual
-export function getLead(psid) {
-    return leads[psid] || {}
-}
 
-// actualizar datos del lead
-export function updateLead(psid, data) {
-    if (!leads[psid]) leads[psid] = {}
-    leads[psid] = { ...leads[psid], ...data }
-    return leads[psid]
-}
+// =============================
+// GUARDAR LEAD EN SHEETS
+// =============================
 
-// borrar lead de memoria
-export function deleteLead(psid) {
-    delete leads[psid]
-}
-
-// ================= GUARDAR EN GOOGLE SHEETS =================
-export async function saveLead(psid) {
-    const lead = leads[psid]
-    if (!lead) return
-
-    const { nombre, telefono, localidad } = lead
-
-    if (!nombre || !telefono || !localidad) return // solo guardar si todo está completo
-    if (lead.guardado) return // evitar duplicados
+export async function saveLead(lead) {
 
     try {
+
+        // Datos que vamos a guardar en la hoja
+        const values = [[
+            new Date().toISOString(), // fecha
+            lead.nombre,
+            lead.telefono,
+            lead.localidad
+        ]]
+
+        // Insertar fila en la hoja
         await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.SPREADSHEET_ID,
-            range: "Leads!A:E",
+
+            spreadsheetId,
+
+            range: "Reclutamiento!A:D", 
+            // Nombre de la hoja: Leads
+            // Columnas:
+            // A = fecha
+            // B = nombre
+            // C = telefono
+            // D = ciudad
+
             valueInputOption: "USER_ENTERED",
+
             requestBody: {
-                values: [[
-                    psid,
-                    nombre,
-                    telefono,
-                    localidad,
-                    new Date().toISOString()
-                ]]
+                values
             }
+
         })
-        console.log("Lead guardado en Google Sheets ✅")
-        leads[psid].guardado = true
+
+        console.log("Lead guardado en Google Sheets")
+
     } catch (error) {
-        console.error("Error guardando en Sheets ❌", error)
-    }
-}
 
-// ================== EXTRACT DATA CONTEXTUAL ===================
-export const extractData = (message, preguntaActual) => {
-    const text = message.trim()
-    let nombre = null
-    let telefono = null
-    let localidad = null
+        console.error("Error guardando lead:", error)
 
-    const ciudades = ["monterrey","apodaca","guadalupe","escobedo","san nicolas"]
-
-    switch (preguntaActual) {
-        case "nombre":
-            nombre = text
-            break
-        case "telefono":
-            const match = text.match(/\d{10}/)
-            telefono = match ? match[0] : null
-            break
-        case "localidad":
-            const lower = text.toLowerCase()
-            for (const ciudad of ciudades) {
-                if (lower.includes(ciudad)) {
-                    localidad = ciudad
-                    break
-                }
-            }
-            break
     }
 
-    return { nombre, telefono, localidad }
-}
-
-// ================== PROCESAR MENSAJE ===================
-export async function processMessage(psid, message) {
-    const leadActual = getLead(psid)
-    const preguntaActual = leadActual.preguntaActual || "nombre" // si no hay, empezar por nombre
-
-    // extraer datos según la pregunta
-    const data = extractData(message, preguntaActual)
-
-    // actualizar lead en memoria
-    const leadActualizado = updateLead(psid, { ...data })
-
-    // determinar siguiente pregunta
-    if (!leadActualizado.nombre) {
-        leadActualizado.preguntaActual = "nombre"
-    } else if (!leadActualizado.telefono) {
-        leadActualizado.preguntaActual = "telefono"
-    } else if (!leadActualizado.localidad) {
-        leadActualizado.preguntaActual = "localidad"
-    } else {
-        leadActualizado.preguntaActual = null
-        // ya tenemos todos los datos, guardar en Sheets
-        await saveLead(psid)
-    }
-
-    return leadActualizado
 }

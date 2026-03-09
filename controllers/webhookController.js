@@ -4,75 +4,83 @@ export const handleWebhook = async (req, res) => {
 
     try {
 
-        // ===============================
-        // VERIFICACIÓN DEL WEBHOOK (GET)
-        // ===============================
+        // =================================================
+        // 1️⃣ VERIFICACIÓN DEL WEBHOOK (cuando lo configuras en Meta)
+        // =================================================
         if (req.method === "GET") {
 
             const mode = req.query["hub.mode"];
             const token = req.query["hub.verify_token"];
             const challenge = req.query["hub.challenge"];
 
+            // Meta envía un token para verificar el webhook
             if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
 
                 console.log("Webhook verificado correctamente ✅");
+
+                // Debemos devolver el challenge
                 return res.status(200).send(challenge);
 
-            } else {
-
-                console.log("Error verificando webhook ❌");
-                return res.sendStatus(403);
-
             }
+
+            console.log("Webhook no autorizado ❌");
+            return res.sendStatus(403);
         }
 
-        // ===============================
-        // EVENTOS DE MENSAJES (POST)
-        // ===============================
+        // =================================================
+        // 2️⃣ EVENTOS DE MENSAJES
+        // =================================================
         if (req.method === "POST") {
+
+            // Verificar que el evento provenga de Messenger
+            if (req.body.object !== "page") {
+                return res.sendStatus(404);
+            }
 
             const entries = req.body.entry || [];
 
             for (const entry of entries) {
 
-                const messagingEvents = entry.messaging || [];
+                const events = entry.messaging || [];
 
-                for (const event of messagingEvents) {
+                for (const event of events) {
 
-                    console.log("Evento recibido:", JSON.stringify(event, null, 2));
-
-                    // Ignorar eventos que no sean mensajes
+                    // Ignorar eventos sin mensaje
                     if (!event.message) continue;
 
-                    // Ignorar mensajes enviados por la página o bot
+                    // Ignorar mensajes enviados por el propio bot
                     if (event.message.is_echo) continue;
 
-                    // Ignorar eventos sin texto
-                    if (!event.message.text) continue;
-
-                    const psid = event.sender?.id;
-                    const message = event.message.text.trim();
+                    const psid = event?.sender?.id;
+                    const message = event?.message?.text;
 
                     if (!psid || !message) continue;
 
-                    console.log(`Mensaje recibido de ${psid}: "${message}"`);
+                    const text = message.trim();
+
+                    console.log(`📩 Usuario ${psid}: ${text}`);
 
                     try {
 
-                        // Procesar el mensaje para extraer datos
-                        await processMessage(psid, message);
+                        // Aquí enviamos el mensaje al flujo del bot
+                        await processMessage(psid, text);
 
                     } catch (error) {
 
-                        console.error("Error en processMessage:", error);
+                        console.error("Error procesando mensaje:", error);
 
                     }
+
                 }
+
             }
 
-            // IMPORTANTE: siempre responder 200
-            // para que Messenger no reintente
+            // IMPORTANTE:
+            // Messenger necesita siempre un 200
+            // o reenviará el evento muchas veces
+
             return res.sendStatus(200);
+
         }
 
         return res.sendStatus(405);
@@ -80,9 +88,7 @@ export const handleWebhook = async (req, res) => {
     } catch (error) {
 
         console.error("Error general en webhook:", error);
-
-        // Evitar que Meta piense que el webhook falló
-        return res.sendStatus(200);
+        return res.sendStatus(500);
 
     }
 };
