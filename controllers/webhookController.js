@@ -31,21 +31,20 @@ export async function handleWebhook(req, res) {
             console.log(estadoUsuario)
         }
 
-        const state = userLeads[psid];
-        const lead = state.lead;
+        const lead = estadoUsuario.lead;
 
         // Detectar cuál es la pregunta de la IA por el contenido del mensaje
         if (/nombre/i.test(event.message.text)) {
-          state.waitingFor = "nombre";
+          estadoUsuario.waitingFor = "nombre";
           console.log("IA preguntó por el nombre");
           continue; // no procesamos la respuesta todavía
         }
 
         // Solo guardar la respuesta si estamos esperando un dato
-        if (state.waitingFor === "nombre") {
+        if (estadoUsuario.waitingFor === "nombre") {
           lead.nombre = text;
           console.log("Nombre guardado:", lead.nombre);
-          state.waitingFor = null;
+          estadoUsuario.waitingFor = null;
           await saveLeadToSheets(lead);
         }
       }
