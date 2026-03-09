@@ -1,6 +1,7 @@
-import { parseLead } from "../services/leadParserService.js";
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
+
+const userLeads = {}; // estado por PSID
 
 export async function handleWebhook(req, res) {
     console.log("Entrando al Controller...")
@@ -8,24 +9,42 @@ export async function handleWebhook(req, res) {
     try {
         const entries = req.body.entry || [];
 
-         for (const entry of entries) {
-            // Leer mensajes normales o standby (IA de Meta dueña del hilo)
+        for (const entry of entries) {
             const events = entry.messaging || entry.standby || [];
 
             for (const event of events) {
-                if (event.message && event.message.text) { // Solo mensajes que contienen texto
-                    // Analizar o guardar segun la intención
-                    const data = parseLead(event.message.text);
-                    console.log("Datos detectados:", data);
+                if (!event.message || !event.message.text) continue;
 
-                    if (data.nombre || data.telefono || data.ciudad) {
-                        const lead = new Lead(data.nombre, data.telefono, data.ciudad);
-                        console.log("Guardando lead:", lead);
-                        await saveLeadToSheets(lead);
-                    } else {
-                        console.log("No se detectaron datos en el mensaje:", event.message.text);
-                    }
-                    
+                const psid = event.sender.id;
+
+                if (!userLeads[psid]) {
+                    userLeads[psid] = {
+                        lead: new Lead(),
+                        waitingFor: "nombre" // primer pregunta
+                    };
+                    // Aquí enviar mensaje a usuario: "Hola, ¿cuál es tu nombre?"
+                    continue;
+                }
+
+                const state = userLeads[psid];
+                const lead = state.lead;
+                const text = event.message.text.trim();
+
+                // Guardar según la pregunta que hiciste
+                if (state.waitingFor === "nombre") {
+                    lead.nombre = text;
+                    state.waitingFor = "telefono";
+                    // enviar mensaje: "Gracias, ahora tu teléfono"
+                } else if (state.waitingFor === "telefono") {
+                    lead.telefono = text;
+                    state.waitingFor = "ciudad";
+                    // enviar mensaje: "Ahora tu ciudad o dónde vives"
+                } else if (state.waitingFor === "ciudad") {
+                    lead.ciudad = text;
+                    // todos los datos completos, guardar en Sheets
+                    await saveLeadToSheets(lead);
+                    delete userLeads[psid];
+                    // enviar mensaje: "Gracias, tus datos fueron guardados"
                 }
             }
         }
