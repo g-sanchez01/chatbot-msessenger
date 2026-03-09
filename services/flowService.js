@@ -10,6 +10,7 @@ import { saveLead } from "./sheetsService.js"
 
 export async function processMessage(psid, message) {
 
+    console.log("3. llamando IA")
     const lead = getLead(psid)
 
     // ============================

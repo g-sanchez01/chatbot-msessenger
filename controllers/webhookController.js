@@ -62,8 +62,11 @@ export const handleWebhook = async (req, res) => {
 
                     try {
 
+                        console.log("1. mensaje recibido")
                         // Aquí enviamos el mensaje al flujo del bot
                         await processMessage(psid, text);
+
+                        console.log("2. proceso terminado")
 
                     } catch (error) {
 
