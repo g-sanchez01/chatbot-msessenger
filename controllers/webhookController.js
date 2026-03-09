@@ -1,11 +1,15 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
-import { parseField } from "../services/leadParserService.js";
 
 const userLeads = {}; // estado por PSID
 
 export async function handleWebhook(req, res) {
+<<<<<<< HEAD
     console.log("Ejecutando controller...")
+=======
+    console.log("Entrando al Controller...")
+    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
+>>>>>>> parent of 481d6dc (parser)
     try {
         const entries = req.body.entry || [];
 
@@ -16,6 +20,7 @@ export async function handleWebhook(req, res) {
                 if (!event.message || !event.message.text) continue;
 
                 const psid = event.sender.id;
+<<<<<<< HEAD
                 const text = event.message.text.trim();
 
                 // Crear estado si no existe
@@ -69,6 +74,42 @@ export async function handleWebhook(req, res) {
                     } else {
                         console.log(`Mensaje ignorado, no es un ${field} válido:`, text);
                     }
+=======
+
+                if (!userLeads[psid]) {
+                    userLeads[psid] = {
+                        lead: new Lead(),
+                        waitingFor: "nombre" // primer pregunta
+                    };
+                    // Aquí enviar mensaje a usuario: "Hola, ¿cuál es tu nombre?"
+                    continue;
+                }
+
+                const state = userLeads[psid];
+                const lead = state.lead;
+                const text = event.message.text.trim();
+
+                // Guardar según la pregunta que hiciste
+                if (state.waitingFor === "nombre") {
+                    lead.nombre = text;
+                    state.waitingFor = "telefono";
+                    console.log("Nombre recibido: ", lead.nombre)
+
+                    // enviar mensaje: "Gracias, ahora tu teléfono"
+                } else if (state.waitingFor === "telefono") {
+                    lead.telefono = text;
+                    state.waitingFor = "ciudad";
+                    console.log("Telefono recibido: ", lead.telefono)
+
+                    // enviar mensaje: "Ahora tu ciudad o dónde vives"
+                } else if (state.waitingFor === "ciudad") {
+                    lead.ciudad = text;
+                    // todos los datos completos, guardar en Sheets
+                    console.log("Ciudad recibido: ", lead.ciudad)
+                    await saveLeadToSheets(lead);
+                    delete userLeads[psid];
+                    // enviar mensaje: "Gracias, tus datos fueron guardados"
+>>>>>>> parent of 481d6dc (parser)
                 }
             }
         }
@@ -76,10 +117,13 @@ export async function handleWebhook(req, res) {
         res.sendStatus(200);
     } catch (error) {
         console.error("Error en webhook:", error);
+<<<<<<< HEAD
         res.sendStatus(200);
+=======
+        res.sendStatus(200); // siempre responder 200 a Meta
+>>>>>>> parent of 481d6dc (parser)
     }
 }
-
 
 // Para verificación de webhook de Meta
 export function verifyWebhook(req, res) {

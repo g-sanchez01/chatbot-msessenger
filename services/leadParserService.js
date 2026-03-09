@@ -1,33 +1,25 @@
-// Validaciones para cada tipo de dato
-export function parseField(text, field) {
-  text = text.trim();
+export function parseLead(text) {
+    console.log("Parseando...")
+
+    text = text.trim();
 
   if (field === "nombre") {
-    return isValidNombre(text) ? text : "";
+    // Si el mensaje tiene "mi nombre es ..." o solo una palabra o frase corta
+    const match = text.match(/(?:mi nombre es|nombre|soy|me llamo)?\s*[:\s]*([a-záéíóúñ\s]{2,})/i);
+    return match ? match[1].trim() : "";
   }
 
   if (field === "telefono") {
-    return isValidTelefono(text) ? text.replace(/\s|-/g, "") : "";
+    // Busca 7 a 15 dígitos, con o sin guiones o espacios
+    const match = text.match(/(\d[\d\s-]{6,14}\d)/);
+    return match ? match[1].replace(/\s|-/g, "") : "";
   }
 
   if (field === "ciudad") {
-    return isValidCiudad(text) ? text : "";
+    // Ciudad: palabra o frase, con o sin "vivo en"
+    const match = text.match(/(?:ciudad|vivo en|resido en)?\s*[:\s]*([a-záéíóúñ\s]{2,})/i);
+    return match ? match[1].trim() : "";
   }
 
   return "";
-}
-
-// Validación de nombre: letras y espacios, al menos 2 caracteres
-function isValidNombre(text) {
-  return /^[a-zA-Záéíóúñ\s]{2,}$/.test(text);
-}
-
-// Validación de teléfono: 7 a 15 dígitos
-function isValidTelefono(text) {
-  return /^\d{7,15}$/.test(text.replace(/\s|-/g, ""));
-}
-
-// Validación de ciudad: letras y espacios, al menos 2 caracteres
-function isValidCiudad(text) {
-  return /^[a-zA-Záéíóúñ\s]{2,}$/.test(text);
 }
