@@ -19,19 +19,17 @@ export async function handleWebhook(req, res) {
         console.log("PSID: ", psid)
         console.log("text: ", text)
 
-        const estadoUsuario = userLeads[psid]
-
         // inicializar estado del usuario
-        if (!estadoUsuario) {
-            estadoUsuario = {
+       if (!userLeads[psid]) {
+            userLeads[psid] = {
                 lead: new Lead(),
-                waitingFor: null // no estamos esperando nada hasta que la IA haga la pregunta
+                waitingFor: null
             };
-
-            console.log(estadoUsuario)
         }
 
+        const estadoUsuario = userLeads[psid]; // ahora const está bien
         const lead = estadoUsuario.lead;
+        console.log("Estado usuario: ", lead)
 
         // Detectar cuál es la pregunta de la IA por el contenido del mensaje
         if (/nombre/i.test(event.message.text)) {
