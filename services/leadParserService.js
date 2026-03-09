@@ -1,17 +1,19 @@
 export function parseLead(text) {
     console.log("Parseando...")
-    const data = {};
-    const regexNombre = /Nombre:\s*([^,]+)/i;
-    const regexTel = /Tel(?:éfono)?:\s*(\d+)/i;
-    const regexCiudad = /Ciudad:\s*([^,]+)/i;
 
-    const nombre = text.match(regexNombre);
-    const telefono = text.match(regexTel);
-    const ciudad = text.match(regexCiudad);
+    text = text.toLowerCase();
 
-    data.nombre = nombre ? nombre[1].trim() : "";
-    data.telefono = telefono ? telefono[1].trim() : "";
-    data.ciudad = ciudad ? ciudad[1].trim() : "";
+    // Nombre: permite acentos y varias palabras
+    const nombreMatch = text.match(/(?:mi nombre es|nombre|soy|me llamo)\s*[:\s]*([a-záéíóúñ\s]+)/i);
+    // Teléfono: permite números, guiones o espacios
+    const telefonoMatch = text.match(/(?:tel(?:éfono)?|celular)\s*[:\s]*([\d\s-]{7,15})/i);
+    // Ciudad: permite varias palabras y acentos
+    const ciudadMatch = text.match(/(?:ciudad|vivo en|resido en)\s*[:\s]*([a-záéíóúñ\s]+)/i);
 
-    return data;
+
+    return {
+        nombre: nombreMatch ? nombreMatch[1].trim() : "",
+        telefono: telefonoMatch ? telefonoMatch[1].replace(/\s|-/g, "") : "",
+        ciudad: ciudadMatch ? ciudadMatch[1].trim() : "",
+    }
 }

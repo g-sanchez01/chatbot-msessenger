@@ -16,12 +16,15 @@ export async function handleWebhook(req, res) {
                 if (event.message && event.message.text) { // Solo mensajes que contienen texto
                     // Analizar o guardar segun la intención
                     const data = parseLead(event.message.text);
-                    console.log("Datos: ", data)
-                    const lead = new Lead(data.nombre, data.telefono, data.ciudad);
-                    console.log("Datos guardados...: ", lead)
+                    console.log("Datos detectados:", data);
 
-                    await saveLeadToSheets(lead);
-                    console.log("Datos sunidos a sheets")
+                    if (data.nombre || data.telefono || data.ciudad) {
+                        const lead = new Lead(data.nombre, data.telefono, data.ciudad);
+                        console.log("Guardando lead:", lead);
+                        await saveLeadToSheets(lead);
+                    } else {
+                        console.log("No se detectaron datos en el mensaje:", event.message.text);
+                    }
                     
                 }
             }
