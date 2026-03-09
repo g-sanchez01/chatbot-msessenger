@@ -40,8 +40,7 @@ export const handleWebhook = async (req, res) => {
         // =================================================
         if (req.method === "POST") {
 
-            const recibeMensaje = req.body.object            
-            console.log("Evento de mensaje: ",recibeMensaje)
+            console.log("Webhook body:", JSON.stringify(req.body, null, 2));
             // Verificar que el evento provenga de Messenger
             if (req.body.object !== "page") {
                 return res.sendStatus(404);
