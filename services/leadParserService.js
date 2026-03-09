@@ -1,20 +1,16 @@
-export function parseField(text, field) {
-    text = text.toLowerCase();
+export function parseLead(text) {
+    const data = {};
+    const regexNombre = /Nombre:\s*([^,]+)/i;
+    const regexTel = /Tel(?:éfono)?:\s*(\d+)/i;
+    const regexCiudad = /Ciudad:\s*([^,]+)/i;
 
-    if (field === "nombre") {
-        const match = text.match(/(?:mi nombre es|nombre|soy)\s*[:\s]*([a-záéíóúA-ZÁÉÍÓÚ\s]+)/i);
-        return match ? match[1].trim() : "";
-    }
+    const nombre = text.match(regexNombre);
+    const telefono = text.match(regexTel);
+    const ciudad = text.match(regexCiudad);
 
-    if (field === "telefono") {
-        const match = text.match(/(?:tel(?:éfono)?|celular)\s*[:\s]*(\d{7,15})/i);
-        return match ? match[1].trim() : "";
-    }
+    data.nombre = nombre ? nombre[1].trim() : "";
+    data.telefono = telefono ? telefono[1].trim() : "";
+    data.ciudad = ciudad ? ciudad[1].trim() : "";
 
-    if (field === "ciudad") {
-        const match = text.match(/(?:ciudad|vivo en|resido en)\s*[:\s]*([a-z\s]+)/i);
-        return match ? match[1].trim() : "";
-    }
-
-    return "";
+    return data;
 }

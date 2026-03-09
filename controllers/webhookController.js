@@ -1,67 +1,41 @@
-import { Lead } from "../models/leadModel.js";
-import { parseField } from "../services/leadParserService.js";
+import { parseLead } from "../services/leadParserService.js";
 import { saveLeadToSheets } from "../services/sheetsService.js";
+import { Lead } from "../models/leadModel.js";
 
-const userLeads = {}; // estado en memoria por PSID
-console.log("Ejecutando controller...")
 export async function handleWebhook(req, res) {
-    const entries = req.body.entry || [];
+    console.log("Entrando al Controller...")
+    console.log("Webhook body:", JSON.stringify(req.body, null, 2));
+    try {
+        const entries = req.body.entry || [];
 
-    for (const entry of entries) {
-        const events = entry.messaging || entry.standby || [];
+         for (const entry of entries) {
+            // Leer mensajes normales o standby (IA de Meta dueña del hilo)
+            const events = entry.messaging || entry.standby || [];
 
-        for (const event of events) {
-            if (!event.message || !event.message.text) continue;
+            for (const event of events) {
+                if (event.message && event.message.text) { // Solo mensajes que contienen texto
+                    // Analizar o guardar segun la intención
+                    const data = parseLead(event.message.text);
+                    console.log("Datos: ", data)
+                    const lead = new Lead(data.nombre, data.telefono, data.ciudad);
 
-            const psid = event.sender.id;
-            if (!userLeads[psid]) userLeads[psid] = new Lead();
-            const lead = userLeads[psid];
-
-            // Captura nombre
-            if (!lead.nombre) {
-                const nombre = parseField(event.message.text, "nombre");
-                if (nombre) {
-                    lead.nombre = nombre;
-                    console.log(`Nombre capturado: ${nombre}`);
-                    // Aquí enviar mensaje a usuario: "Gracias, ahora tu teléfono"
-                    continue;
+                    await saveLeadToSheets(lead);
+                    console.log("Datos subidos: ", lead)
                 }
-            }
-
-            // Captura teléfono
-            if (!lead.telefono) {
-                const tel = parseField(event.message.text, "telefono");
-                if (tel) {
-                    lead.telefono = tel;
-                    console.log(`Teléfono capturado: ${tel}`);
-                    // Mensaje a usuario: "Ahora tu ciudad"
-                    continue;
-                }
-            }
-
-            // Captura ciudad
-            if (!lead.ciudad) {
-                const ciudad = parseField(event.message.text, "ciudad");
-                if (ciudad) {
-                    lead.ciudad = ciudad;
-                    console.log(`Ciudad capturada: ${ciudad}`);
-                }
-            }
-
-            // Guardar en Sheets si todos los datos están completos
-            if (lead.isComplete()) {
-                await saveLeadToSheets(lead);
-                delete userLeads[psid]; // limpiar estado
             }
         }
-  }
 
-  res.sendStatus(200);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error("Error en webhook:", error);
+        res.sendStatus(200); // siempre responder 200 a Meta
+    }
 }
 
-// Verificación de webhook
+// Para verificación de webhook de Meta
 export function verifyWebhook(req, res) {
-    console.log("Verificando webhook...")
+    console.log("Verificando Webhook...")
+
     const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];

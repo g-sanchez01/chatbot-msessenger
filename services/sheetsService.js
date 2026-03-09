@@ -14,7 +14,7 @@ export async function saveLeadToSheets(lead) {
       range: "Reclutamiento!A:D",
       valueInputOption: "RAW",
       resource: {
-        values: [[lead.nombre, lead.telefono, lead.ciudad, lead.timestamp, lead.timestamp]],
+        values: [[lead.nombre, lead.telefono, lead.ciudad, lead.timestamp]],
       },
     });
     console.log("Lead guardado:", lead);
