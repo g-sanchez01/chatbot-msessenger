@@ -16,13 +16,19 @@ export async function handleWebhook(req, res) {
 
         const psid = event.sender.id;
         const text = event.message.text.trim();
+        console.log("PSID: ", psid)
+        console.log("text: ", text)
+
+        const estadoUsuario = userLeads[psid]
 
         // inicializar estado del usuario
-        if (!userLeads[psid]) {
-          userLeads[psid] = {
-            lead: new Lead(),
-            waitingFor: null // no estamos esperando nada hasta que la IA haga la pregunta
-          };
+        if (!estadoUsuario) {
+            estadoUsuario = {
+                lead: new Lead(),
+                waitingFor: null // no estamos esperando nada hasta que la IA haga la pregunta
+            };
+
+            console.log(estadoUsuario)
         }
 
         const state = userLeads[psid];
