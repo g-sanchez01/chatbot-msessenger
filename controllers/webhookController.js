@@ -1,161 +1,88 @@
-import { saveLeadToSheets } from "../services/sheetsService.js";
-import { Lead } from "../models/leadModel.js";
+import { processMessage } from "../services/flowService.js";
 
-const userLeads = {}; // estado por PSID
+export const handleWebhook = async (req, res) => {
 
-export async function handleWebhook(req, res) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    console.log("Ejecutando controller...")
-=======
-    console.log("Entrando al Controller...")
-    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
->>>>>>> parent of 481d6dc (parser)
-=======
-    console.log("Entrando al Controller...")
-    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
->>>>>>> parent of 481d6dc (parser)
     try {
-        const entries = req.body.entry || [];
 
-        for (const entry of entries) {
-            const events = entry.messaging || entry.standby || [];
+        // ===============================
+        // VERIFICACIÓN DEL WEBHOOK (GET)
+        // ===============================
+        if (req.method === "GET") {
 
-            for (const event of events) {
-                if (!event.message || !event.message.text) continue;
+            const mode = req.query["hub.mode"];
+            const token = req.query["hub.verify_token"];
+            const challenge = req.query["hub.challenge"];
 
-                const psid = event.sender.id;
-<<<<<<< HEAD
-<<<<<<< HEAD
-                const text = event.message.text.trim();
+            if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
 
-                // Crear estado si no existe
-                if (!userLeads[psid]) {
-                    userLeads[psid] = {
-                        lead: new Lead(),
-                        lastIAQuestion: null,
-                    };
-                    console.log("Nuevo usuario, esperando nombre...");
-                    continue; // aquí salimos y no intentamos usar lead todavía
-                }
+                console.log("Webhook verificado correctamente ✅");
+                return res.status(200).send(challenge);
 
-                const state = userLeads[psid]
-                const lead = state.lead; // ya seguro que existe
-                console.log("lead: ", lead)
+            } else {
 
-                // Detectar si el mensaje recibido es de la IA preguntando por un dato
-                if (event.message.is_echo && event.message.text) {
-                    console.log("Es mensaje de la IA...")
-                    const iaMsg = text.toLowerCase();
+                console.log("Error verificando webhook ❌");
+                return res.sendStatus(403);
 
-                    console.log("La IA dice: ",iaMsg)
-                    if (iaMsg.includes("nombre")) {
-                        state.lastIAQuestion = "nombre";
-                    } else if (iaMsg.includes("teléfono") || iaMsg.includes("celular")) {
-                        state.lastIAQuestion = "telefono";
-                    } else if (iaMsg.includes("ciudad") || iaMsg.includes("dónde vives")) {
-                        state.lastIAQuestion = "ciudad";
-                    }
-                    continue; // solo actualizamos la última pregunta de la IA
-                }
-
-                // Solo guardar si sabemos cuál fue la pregunta de la IA
-                if (state.lastIAQuestion) {
-                    const field = state.lastIAQuestion;
-                    const value = parseField(text, field);
-
-                    if (value) {
-                    lead[field] = value;
-                    console.log(`${field} recibido:`, value);
-
-                    // Resetear la última pregunta de la IA para que no acepte otros mensajes
-                    state.lastIAQuestion = null;
-
-                    // Si ya tenemos todos los datos, guardar en Sheets
-                    if (lead.nombre && lead.telefono && lead.ciudad) {
-                        await saveLeadToSheets(lead);
-                        delete userLeads[psid];
-                        console.log("Todos los datos guardados en Sheets");
-                    }
-                    } else {
-                        console.log(`Mensaje ignorado, no es un ${field} válido:`, text);
-                    }
-=======
-
-=======
-
->>>>>>> parent of 481d6dc (parser)
-                if (!userLeads[psid]) {
-                    userLeads[psid] = {
-                        lead: new Lead(),
-                        waitingFor: "nombre" // primer pregunta
-                    };
-                    // Aquí enviar mensaje a usuario: "Hola, ¿cuál es tu nombre?"
-                    continue;
-                }
-
-                const state = userLeads[psid];
-                const lead = state.lead;
-                const text = event.message.text.trim();
-
-                // Guardar según la pregunta que hiciste
-                if (state.waitingFor === "nombre") {
-                    lead.nombre = text;
-                    state.waitingFor = "telefono";
-                    console.log("Nombre recibido: ", lead.nombre)
-
-                    // enviar mensaje: "Gracias, ahora tu teléfono"
-                } else if (state.waitingFor === "telefono") {
-                    lead.telefono = text;
-                    state.waitingFor = "ciudad";
-                    console.log("Telefono recibido: ", lead.telefono)
-
-                    // enviar mensaje: "Ahora tu ciudad o dónde vives"
-                } else if (state.waitingFor === "ciudad") {
-                    lead.ciudad = text;
-                    // todos los datos completos, guardar en Sheets
-                    console.log("Ciudad recibido: ", lead.ciudad)
-                    await saveLeadToSheets(lead);
-                    delete userLeads[psid];
-                    // enviar mensaje: "Gracias, tus datos fueron guardados"
-<<<<<<< HEAD
->>>>>>> parent of 481d6dc (parser)
-=======
->>>>>>> parent of 481d6dc (parser)
-                }
             }
         }
 
-        res.sendStatus(200);
-    } catch (error) {
-        console.error("Error en webhook:", error);
-<<<<<<< HEAD
-<<<<<<< HEAD
-        res.sendStatus(200);
-=======
-        res.sendStatus(200); // siempre responder 200 a Meta
->>>>>>> parent of 481d6dc (parser)
-=======
-        res.sendStatus(200); // siempre responder 200 a Meta
->>>>>>> parent of 481d6dc (parser)
-    }
-}
+        // ===============================
+        // EVENTOS DE MENSAJES (POST)
+        // ===============================
+        if (req.method === "POST") {
 
-// Para verificación de webhook de Meta
-export function verifyWebhook(req, res) {
-    console.log("Verificando Webhook...")
+            const entries = req.body.entry || [];
 
-    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+            for (const entry of entries) {
 
-    if (mode && token) {
-        if (mode === "subscribe" && token === VERIFY_TOKEN) {
-            console.log("Webhook verificado!");
-            res.status(200).send(challenge);
-        } else {
-            res.sendStatus(403);
+                const messagingEvents = entry.messaging || [];
+
+                for (const event of messagingEvents) {
+
+                    console.log("Evento recibido:", JSON.stringify(event, null, 2));
+
+                    // Ignorar eventos que no sean mensajes
+                    if (!event.message) continue;
+
+                    // Ignorar mensajes enviados por la página o bot
+                    if (event.message.is_echo) continue;
+
+                    // Ignorar eventos sin texto
+                    if (!event.message.text) continue;
+
+                    const psid = event.sender?.id;
+                    const message = event.message.text.trim();
+
+                    if (!psid || !message) continue;
+
+                    console.log(`Mensaje recibido de ${psid}: "${message}"`);
+
+                    try {
+
+                        // Procesar el mensaje para extraer datos
+                        await processMessage(psid, message);
+
+                    } catch (error) {
+
+                        console.error("Error en processMessage:", error);
+
+                    }
+                }
+            }
+
+            // IMPORTANTE: siempre responder 200
+            // para que Messenger no reintente
+            return res.sendStatus(200);
         }
+
+        return res.sendStatus(405);
+
+    } catch (error) {
+
+        console.error("Error general en webhook:", error);
+
+        // Evitar que Meta piense que el webhook falló
+        return res.sendStatus(200);
+
     }
-}
+};
