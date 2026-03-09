@@ -47,8 +47,6 @@ export const handleWebhook = async (req, res) => {
                 return res.sendStatus(404);
             }
 
-            console.log("Mensaje: ", )
-
             const entries = req.body.entry || [];
 
             for (const entry of entries) {
