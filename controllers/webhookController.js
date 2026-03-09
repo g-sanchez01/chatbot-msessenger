@@ -40,10 +40,14 @@ export const handleWebhook = async (req, res) => {
         // =================================================
         if (req.method === "POST") {
 
+            const recibeMensaje = req.body.object            
+            console.log("Evento de mensaje: ",recibeMensaje)
             // Verificar que el evento provenga de Messenger
             if (req.body.object !== "page") {
                 return res.sendStatus(404);
             }
+
+            console.log("Mensaje: ", )
 
             const entries = req.body.entry || [];
 
