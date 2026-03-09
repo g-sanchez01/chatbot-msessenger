@@ -15,64 +15,63 @@ export async function handleWebhook(req, res) {
         if (!event.message || !event.message.text) continue;
 
         const psid = event.sender.id;
+        const text = event.message.text.trim();
 
+        // Crear estado si no existe
         if (!userLeads[psid]) {
-          // Crear estado inicial sin ignorar el primer mensaje
           userLeads[psid] = {
             lead: new Lead(),
-            waitingFor: "nombre" // primer pregunta
+            lastIAQuestion: null, // almacenar última pregunta de la IA
           };
-          console.log("Nuevo usuario, esperando nombre...");
         }
 
         const state = userLeads[psid];
         const lead = state.lead;
-        const text = event.message.text.trim();
 
-        // Guardar según la pregunta que hizo la IA usando parseField
-        if (state.waitingFor === "nombre") {
-          const nombre = parseField(text, "nombre");
-          if (nombre) {
-            lead.nombre = nombre;
-            state.waitingFor = "telefono";
-            console.log("Nombre recibido:", lead.nombre);
-            // enviar mensaje: "Gracias, ahora tu teléfono"
-          } else {
-            console.log("Mensaje ignorado, no es un nombre válido:", text);
+        // Detectar si el mensaje recibido es de la IA preguntando por un dato
+        if (event.message.is_echo && event.message.text) {
+          const iaMsg = text.toLowerCase();
+
+          if (iaMsg.includes("nombre")) {
+            state.lastIAQuestion = "nombre";
+          } else if (iaMsg.includes("teléfono") || iaMsg.includes("celular")) {
+            state.lastIAQuestion = "telefono";
+          } else if (iaMsg.includes("ciudad") || iaMsg.includes("dónde vives")) {
+            state.lastIAQuestion = "ciudad";
           }
+          continue; // solo actualizamos la última pregunta de la IA
+        }
 
-        } else if (state.waitingFor === "telefono") {
-          const telefono = parseField(text, "telefono");
-          if (telefono) {
-            lead.telefono = telefono;
-            state.waitingFor = "ciudad";
-            console.log("Teléfono recibido:", lead.telefono);
-            // enviar mensaje: "Ahora tu ciudad o dónde vives"
-          } else {
-            console.log("Mensaje ignorado, no es un teléfono válido:", text);
-          }
+        // Solo guardar si sabemos cuál fue la pregunta de la IA
+        if (state.lastIAQuestion) {
+          const field = state.lastIAQuestion;
+          const value = parseField(text, field);
 
-        } else if (state.waitingFor === "ciudad") {
-          const ciudad = parseField(text, "ciudad");
-          if (ciudad) {
-            lead.ciudad = ciudad;
-            console.log("Ciudad recibida:", lead.ciudad);
-            // Todos los datos completos, guardar en Sheets
-            await saveLeadToSheets(lead);
-            delete userLeads[psid];
-            // enviar mensaje: "Gracias, tus datos fueron guardados"
+          if (value) {
+            lead[field] = value;
+            console.log(`${field} recibido:`, value);
+
+            // Resetear la última pregunta de la IA para que no acepte otros mensajes
+            state.lastIAQuestion = null;
+
+            // Si ya tenemos todos los datos, guardar en Sheets
+            if (lead.nombre && lead.telefono && lead.ciudad) {
+              await saveLeadToSheets(lead);
+              delete userLeads[psid];
+              console.log("Todos los datos guardados en Sheets");
+            }
           } else {
-            console.log("Mensaje ignorado, no es una ciudad válida:", text);
+            console.log(`Mensaje ignorado, no es un ${field} válido:`, text);
           }
         }
       }
     }
 
     res.sendStatus(200);
-  } catch (error) {
-    console.error("Error en webhook:", error);
-    res.sendStatus(200); // siempre responder 200 a Meta
-  }
+    } catch (error) {
+        console.error("Error en webhook:", error);
+        res.sendStatus(200);
+    }
 }
 
 
