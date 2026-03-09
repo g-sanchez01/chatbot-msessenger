@@ -34,14 +34,19 @@ export async function handleWebhook(req, res) {
                 if (state.waitingFor === "nombre") {
                     lead.nombre = text;
                     state.waitingFor = "telefono";
+                    console.log("Nombre recibido: ", lead.nombre)
+
                     // enviar mensaje: "Gracias, ahora tu teléfono"
                 } else if (state.waitingFor === "telefono") {
                     lead.telefono = text;
                     state.waitingFor = "ciudad";
+                    console.log("Telefono recibido: ", lead.telefono)
+
                     // enviar mensaje: "Ahora tu ciudad o dónde vives"
                 } else if (state.waitingFor === "ciudad") {
                     lead.ciudad = text;
                     // todos los datos completos, guardar en Sheets
+                    console.log("Ciudad recibido: ", lead.ciudad)
                     await saveLeadToSheets(lead);
                     delete userLeads[psid];
                     // enviar mensaje: "Gracias, tus datos fueron guardados"
