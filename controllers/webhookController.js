@@ -1,88 +1,79 @@
-import { processMessage } from "../services/flowService.js";
+import { saveLeadToSheets } from "../services/sheetsService.js";
+import { Lead } from "../models/leadModel.js";
 
-export const handleWebhook = async (req, res) => {
-
+export async function handleWebhook(req, res) {
+    console.log("Entrando al Controller...")
+    //console.log("Webhook body:", JSON.stringify(req.body, null, 2));
     try {
+        const entries = req.body.entry || [];
 
-        // ===============================
-        // VERIFICACIÓN DEL WEBHOOK (GET)
-        // ===============================
-        if (req.method === "GET") {
+        for (const entry of entries) {
+            const events = entry.messaging || entry.standby || [];
 
-            const mode = req.query["hub.mode"];
-            const token = req.query["hub.verify_token"];
-            const challenge = req.query["hub.challenge"];
+            for (const event of events) {
+                if (!event.message || !event.message.text) continue;
 
-            if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+                const psid = event.sender.id;
 
-                console.log("Webhook verificado correctamente ✅");
-                return res.status(200).send(challenge);
+                if (!userLeads[psid]) {
+                    userLeads[psid] = {
+                        lead: new Lead(),
+                        waitingFor: "nombre" // primer pregunta
+                    };
+                    // Aquí enviar mensaje a usuario: "Hola, ¿cuál es tu nombre?"
+                    continue;
+                }
 
-            } else {
+                const state = userLeads[psid];
+                const lead = state.lead;
+                const text = event.message.text.trim();
 
-                console.log("Error verificando webhook ❌");
-                return res.sendStatus(403);
+                // Guardar según la pregunta que hiciste
+                if (state.waitingFor === "nombre") {
+                    lead.nombre = text;
+                    state.waitingFor = "telefono";
+                    console.log("Nombre recibido: ", lead.nombre)
 
-            }
-        }
+                    // enviar mensaje: "Gracias, ahora tu teléfono"
+                } else if (state.waitingFor === "telefono") {
+                    lead.telefono = text;
+                    state.waitingFor = "ciudad";
+                    console.log("Telefono recibido: ", lead.telefono)
 
-        // ===============================
-        // EVENTOS DE MENSAJES (POST)
-        // ===============================
-        if (req.method === "POST") {
-
-            const entries = req.body.entry || [];
-
-            for (const entry of entries) {
-
-                const messagingEvents = entry.messaging || [];
-
-                for (const event of messagingEvents) {
-
-                    console.log("Evento recibido:", JSON.stringify(event, null, 2));
-
-                    // Ignorar eventos que no sean mensajes
-                    if (!event.message) continue;
-
-                    // Ignorar mensajes enviados por la página o bot
-                    if (event.message.is_echo) continue;
-
-                    // Ignorar eventos sin texto
-                    if (!event.message.text) continue;
-
-                    const psid = event.sender?.id;
-                    const message = event.message.text.trim();
-
-                    if (!psid || !message) continue;
-
-                    console.log(`Mensaje recibido de ${psid}: "${message}"`);
-
-                    try {
-
-                        // Procesar el mensaje para extraer datos
-                        await processMessage(psid, message);
-
-                    } catch (error) {
-
-                        console.error("Error en processMessage:", error);
-
-                    }
+                    // enviar mensaje: "Ahora tu ciudad o dónde vives"
+                } else if (state.waitingFor === "ciudad") {
+                    lead.ciudad = text;
+                    // todos los datos completos, guardar en Sheets
+                    console.log("Ciudad recibido: ", lead.ciudad)
+                    await saveLeadToSheets(lead);
+                    delete userLeads[psid];
+                    // enviar mensaje: "Gracias, tus datos fueron guardados"
                 }
             }
-
-            // IMPORTANTE: siempre responder 200
-            // para que Messenger no reintente
-            return res.sendStatus(200);
         }
 
-        return res.sendStatus(405);
-
+        res.sendStatus(200);
     } catch (error) {
-
-        console.error("Error general en webhook:", error);
-
-        // Evitar que Meta piense que el webhook falló
-        return res.sendStatus(200);
-
+        console.error("Error en webhook:", error);
+        res.sendStatus(200); // siempre responder 200 a Meta
     }
-};
+}
+
+// Para verificación de webhook de Meta
+export function verifyWebhook(req, res) {
+    console.log("Verificando Webhook...")
+
+    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+
+    if (mode && token) {
+        if (mode === "subscribe" && token === VERIFY_TOKEN) {
+            console.log("Webhook verificado!");
+            res.status(200).send(challenge);
+        } else {
+            res.sendStatus(403);
+        }
+    }
+}
