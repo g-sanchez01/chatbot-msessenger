@@ -125,8 +125,3 @@ export function verifyWebhook(req, res) {
     }
   }
 }
-
-// Función para hacer delay
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
