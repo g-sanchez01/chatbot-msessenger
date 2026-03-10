@@ -5,38 +5,36 @@ import { parseLead } from "../services/leadParserService.js";
 const userLeads = {}; // estado por PSID (id usuario)
 
 export async function handleWebhook(req, res) {
-  console.log("Ejecutando handleWebhook...")
-
+  console.log ("Ejecutando handleWebhook...")
   try {
-    const entries = req.body.entry || [];
+    const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
+    //console.log("Grupo de Eventos: ", entries.standby)
 
-    for (const entry of entries) {
+    // Itera sobre cada entry en el webhook.
+    for (const entry of entries) { // Cada entry puede contener varios eventos de mensajes o interacciones.
+      // Dentro de cada entry, buscamos los eventos de mensajería
+      const events = entry.messaging || entry.standby || []; // messaging → mensajes activos que envía o recibe la página. standby → eventos que están en espera (por ejemplo cuando hay otra IA conectada).
 
-      const events = entry.messaging || entry.standby || [];
-
-      for (const event of events) {
-
-        if (!event.message || !event.message.text) continue;
-
-        console.log("Envió mensaje:", event.sender?.id, "Recibió el mensaje:", event.recipient?.id);
-
+      // Itera sobre cada evento dentro de esa entry.
+      for (const event of events) { // Cada event puede ser un mensaje del usuario, de la IA, o un sistema (echo, delivery, postback, etc.).
+        
+        if (!event.message || !event.message.text) continue; // Ignora cualquier evento que no tenga un mensaje o que el mensaje no tenga texto.
+        
+        console.log("Envió mensaje:", event.sender?.id, "Recibió el mensaje:", event.recipient?.id);  
+       
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const aiMessage = event.message.is_echo; // Lectura de mensaje de la IA
+        const aiMessage = event.message.is_echo
 
-        console.log("PSID:", psid, "Mensaje recibido:", text);
+        console.log("PSID: ", psid, "Mensaje recibido: ", text)
 
-        // Solo analizar mensajes de la IA
+        // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessage) {
-          console.log("Mensaje de la IA detectado para PSID:", psid, "mensaje:", text);
+          console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
         }
-
-      } // ← cierre for events
-
-    } // ← cierre for entries
-
+      }
+    }
     res.sendStatus(200);
-
   } catch (error) {
     console.error("Error en webhook:", error);
     res.sendStatus(200);
