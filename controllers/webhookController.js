@@ -1,8 +1,9 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
-import { parseLead } from "../services/leadParserService.js";
+import { getUserState, saveUserState } from "../services/firestoreService.js";
+import { saveMessage } from "../services/messageService.js";
+import { saveLead } from "../services/leadService.js";
 
-const userState = {}; // estado por PSID (id usuario)
 const processedMessages = new Set();
 
 export async function handleWebhook(req, res) {
@@ -33,23 +34,13 @@ export async function handleWebhook(req, res) {
         if (!psid || !mid) continue; // Si no existe psid salta al siguiente.
 
         // EVITAR DUPLICADOS
-        if (processedMessages.has(mid)) {
-          console.log("Mensaje duplicado ignorado:", mid);
-          continue;
+        if (processedMessages.size > 10000) {
+          processedMessages.clear();
         }
 
         processedMessages.add(mid);
 
-        // Inicializar memoria del usuario
-        if (!userState[psid]) { // Si no existe todavía un estado guardado para este usuario…
-          userState[psid] = {
-            waitingFor: null, // Qué dato está esperando la IA (nombre, teléfono, etc.)
-            nombre: null, // El nombre que el usuario ya proporcionó
-            lastTimestamp: 0
-          }
-        }
-
-        const state = userState[psid]
+        const state = await getUserState(psid); // Obtener estado desde Firestore
 
         // ignorar eventos viejos
         if (timestamp <= state.lastTimestamp) {
@@ -58,11 +49,11 @@ export async function handleWebhook(req, res) {
         }
         state.lastTimestamp = timestamp; // actualizar ultimo evento procesado
 
-        //console.log("PSID: ", psid, "Mensaje recibido: ", text)*/
-
         // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessageRead) {
           console.log("Mensaje de IA detectado:", text);
+
+          await saveMessage(psid, text, "bot");
 
           const aiMessage = text.toLowerCase(); // Parseamos el mensaje de la IA
 
@@ -76,11 +67,15 @@ export async function handleWebhook(req, res) {
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
+
+          await saveUserState(psid, state);
           continue
         }
 
         // Respuesta del Usuario
         console.log("Usuario respondio: ", text)
+
+        await saveMessage(psid, text, "user");
 
         const estadoEsperado = state.waitingFor
 
@@ -91,7 +86,19 @@ export async function handleWebhook(req, res) {
           state.nombre = text;
           state.waitingFor = null;
 
-          console.log("Nombre guardado", state.nombre)
+          await saveUserState(psid, state);
+
+          console.log("Nombre guardado:", state.nombre);
+
+          const lead = new Lead(state.nombre, null, null);
+          lead.psid = psid;
+
+          await saveLead(lead);
+
+          await saveLeadToSheets(lead);
+
+        } else {
+          await saveUserState(psid, state);
         }
 
       }

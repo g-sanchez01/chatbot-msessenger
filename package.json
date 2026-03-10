@@ -14,9 +14,11 @@
     "nodemon": "^3.1.14"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^8.3.0",
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "firebase-admin": "^13.7.0",
     "googleapis": "^171.4.0",
     "openai": "^6.25.0"
   }
