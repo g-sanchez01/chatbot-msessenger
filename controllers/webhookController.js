@@ -2,7 +2,7 @@ import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
 import { parseLead } from "../services/leadParserService.js";
 
-const userLeads = {}; // estado por PSID (id usuario)
+const userState = {}; // estado por PSID (id usuario)
 
 export async function handleWebhook(req, res) {
   console.log ("Ejecutando handleWebhook...")
@@ -26,6 +26,16 @@ export async function handleWebhook(req, res) {
         const text = event.message.text.trim();
         const aiMessageRead = event.message.is_echo // Lecutra de mensaje de la IA
 
+        // Inicializar memoria del usuario
+        if (!userState[psid]) { // Si no existe todavía un estado guardado para este usuario…
+          userState[psid] = {
+            waitingFor: null, // Qué dato está esperando la IA (nombre, teléfono, etc.)
+            nombre: null // El nombre que el usuario ya proporcionó
+          }
+        }
+
+        const state = userState[psid]
+
         //console.log("PSID: ", psid, "Mensaje recibido: ", text)
 
         // Solo analizar mensajes de la IA (is_echo = true)
@@ -40,9 +50,20 @@ export async function handleWebhook(req, res) {
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
-
-
+          continue
         }
+
+        // Respuesta del Usuario
+        console.log("Usuario respondio", text)
+
+        if (state.waitingFor === "nombre") {
+          state.nombre = text;
+          state.waitingFor = null;
+
+          console.log("Nombre guardado", state.nombre)
+        }
+
+
       }
     }
     res.sendStatus(200);
