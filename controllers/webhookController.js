@@ -5,6 +5,7 @@ import { parseLead } from "../services/leadParserService.js";
 const userState = {}; // estado por PSID (id usuario)
 
 export async function handleWebhook(req, res) {
+  res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
   try {
     const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
@@ -55,7 +56,7 @@ export async function handleWebhook(req, res) {
         }
 
         // Respuesta del Usuario
-        console.log("Usuario respondio", text)
+        console.log("Usuario respondio: ", text)
         const estadoEsperado = state.waitingFor
         console.log("Estado Esperado del Usuario: ", estadoEsperado)
 
@@ -69,10 +70,9 @@ export async function handleWebhook(req, res) {
 
       }
     }
-    res.sendStatus(200);
   } catch (error) {
     console.error("Error en webhook:", error);
-    res.sendStatus(200);
+    //res.sendStatus(200);
   }
 }
 
