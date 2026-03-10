@@ -11,45 +11,41 @@ export async function handleWebhook(req, res) {
       const events = entry.messaging || entry.standby || [];
 
       for (const event of events) {
-        // ignorar mensajes sin texto o mensajes de la propia IA (echo)
-        if (!event.message || !event.message.text || event.message.is_echo) continue;
+        if (!event.message || !event.message.text) continue;
 
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        console.log("PSID: ", psid)
-        console.log("text: ", text)
+        console.log("PSID:", psid);
+        console.log("Mensaje:", text);
 
         // inicializar estado del usuario
-       if (!userLeads[psid]) {
-            userLeads[psid] = {
-                lead: new Lead(),
-                waitingFor: null
-            };
+        if (!userLeads[psid]) {
+          userLeads[psid] = {
+            lead: new Lead(),
+            waitingFor: null
+          };
         }
 
-        const estadoUsuario = userLeads[psid]; // ahora const está bien
+        const estadoUsuario = userLeads[psid];
         const lead = estadoUsuario.lead;
-        console.log("Estado usuario: ", lead)
+        const mensajeParse = text.toLowerCase();
 
-        const mensajeParse = event.message.text.toLowerCase()
-        console.log(mensajeParse)
-
-       // Detectar pregunta de la IA
-        if (mensajeParse.includes("nombre") && event.message.is_echo) { 
-            // is_echo indica que el mensaje es de la IA (tu página/servicio) y no del usuario
+        // 1️⃣ Detectar mensaje de la IA (echo = true)
+        if (event.message.is_echo) {
+          if (mensajeParse.includes("nombre")) {
             estadoUsuario.waitingFor = "nombre";
             console.log("IA preguntó por el nombre");
-            continue; // no procesamos respuesta todavía
-        } else {
-            console.log("La IA no pregunto por el nombre")
+          }
+          // aquí podrías hacer lo mismo para "teléfono" o "ciudad"
+          continue; // no procesamos la respuesta todavía
         }
 
-        // Guardar la respuesta del usuario solo si estamos esperando nombre
-        if (estadoUsuario.waitingFor === "nombre" && !event.message.is_echo) {
-            estadoUsuario.lead.nombre = event.message.text.trim();
-            estadoUsuario.waitingFor = null; // ya no estamos esperando
-            console.log("Nombre del usuario guardado:", estadoUsuario.lead.nombre);
-            await saveLeadToSheets(estadoUsuario.lead);
+        // 2️⃣ Guardar la respuesta del usuario solo si estamos esperando algo
+        if (estadoUsuario.waitingFor === "nombre") {
+          lead.nombre = text;
+          estadoUsuario.waitingFor = null;
+          console.log("Nombre del usuario guardado:", lead.nombre);
+          await saveLeadToSheets(lead);
         }
       }
     }

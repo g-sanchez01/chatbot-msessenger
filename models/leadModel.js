@@ -1,8 +1,6 @@
 export class Lead {
-  constructor(nombre = "", telefono = "", ciudad = "") {
+  constructor(nombre = "") {
     this.nombre = nombre;
-    this.telefono = telefono;
-    this.ciudad = ciudad;
     this.timestamp = new Date().toISOString();
   }
 }
