@@ -20,13 +20,13 @@ export async function handleWebhook(req, res) {
         
         if (!event.message || !event.message.text) continue; // Ignora cualquier evento que no tenga un mensaje o que el mensaje no tenga texto.
         
-        console.log("Envió mensaje:", event.sender?.id, "Recibió el mensaje:", event.recipient?.id);  
+        //console.log("Envió mensaje:", event.sender?.id, "Recibió el mensaje:", event.recipient?.id);  
        
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const aiMessage = event.message.is_echo
+        const aiMessage = event.message.is_echo // Lecutra de mensaje de la IA
 
-        console.log("PSID: ", psid, "Mensaje recibido: ", text)
+        //console.log("PSID: ", psid, "Mensaje recibido: ", text)
 
         // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessage) {
@@ -43,7 +43,7 @@ export async function handleWebhook(req, res) {
 
 // Verificación de webhook
 export function verifyWebhook(req, res) {
-  console.log ("Ejecutando verifyWebhook...")
+  //console.log ("Ejecutando verifyWebhook...")
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
