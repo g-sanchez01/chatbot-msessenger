@@ -1,6 +1,7 @@
+import { db } from "../db/firestore.js"
 import { saveUserName } from "../services/leadService.js";
 
-const userLeads = {}; // estado por PSID
+//const userLeads = {}; // estado por PSID
 
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
@@ -21,10 +22,14 @@ export async function handleWebhook(req, res) {
         const aiMessageRead = event.message.is_echo
         const aiMessageParse = text.toLowerCase()
 
+        const userRef = db.collection("users").doc(psid);
+        const userDoc = await userRef.get();
+        const waitingForName = userDoc.exists && userDoc.data().waitingForName;
+
         // Detectar cuando la IA pregunta por el nombre
         if (aiMessageRead && aiMessageParse.includes("nombre")) {
           console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
-          userLeads[psid] = { waitingForName: true };
+          await userRef.set({ waitingForName: true }, { merge: true });
           console.log(userLeads[psid])
           continue;
 
@@ -33,7 +38,7 @@ export async function handleWebhook(req, res) {
         }
 
         // Mensaje del usuario real
-        if(!aiMessageRead && userLeads[psid]?.waitingForName) {
+        if(!aiMessageRead && waitingForName) {
           // Extraer solo el nombre (primer palabra o usando "mi nombre es...")
           let userName = text;
           const match = text.match(/mi nombre es (\w+)/i);
@@ -42,7 +47,7 @@ export async function handleWebhook(req, res) {
 
           // Guardar en Firestore
           await saveUserName(psid, userName)
-          userLeads[psid].waitingForName = false;
+          await userRef.set({ waitingForName: false }, { merge: true });
           console.log("Nombre recibido y guardado para PSID", psid, ": ", userName);
 
         }
