@@ -18,15 +18,17 @@ export async function handleWebhook(req, res) {
         const psid = event.sender.id;
         const text = event.message.text.trim();
         const aiMessageRead = event.message.is_echo
+        const aiMessageParse = text.toLowerCase();
 
-        // Solo analizar mensajes de la IA (is_echo = true)
         // Detectar cuando la IA pregunta por el nombre
         if (aiMessageRead && aiMessageParse.includes("nombre")) {
           console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
           userLeads[psid] = { waitingForName: true };
+          console.log(userLeads[psid]);
           continue;
+        } else {
+          console.log("IA aún no pregunta el nombre");
         }
-
 
         // Guardar el nombre cuando el usuario responda
         if (userLeads[psid]?.waitingForName) {
