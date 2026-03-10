@@ -21,23 +21,30 @@ export async function handleWebhook(req, res) {
         const aiMessageRead = event.message.is_echo
         const aiMessageParse = text.toLowerCase()
 
-        // Solo analizar mensajes de la IA (is_echo = true)
         // Detectar cuando la IA pregunta por el nombre
         if (aiMessageRead && aiMessageParse.includes("nombre")) {
           console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
           userLeads[psid] = { waitingForName: true };
           console.log(userLeads[psid])
           continue;
+
         } else {
           console.log("IA aun no pregunta el nombre")
         }
 
-        // Guardar el nombre cuando el usuario responda
-        if (userLeads[psid]?.waitingForName) {
-          const userName = text;
-          await saveUserName(psid, userName);
+        // Mensaje del usuario real
+        if(!aiMessageRead && userLeads[psid]?.waitingForName) {
+          // Extraer solo el nombre (primer palabra o usando "mi nombre es...")
+          let userName = text;
+          const match = text.match(/mi nombre es (\w+)/i);
+          if (match) userName = match[1];
+          else userName = text.split(" ")[0]; // fallback: primera palabra
+
+          // Guardar en Firestore
+          await saveUserName(psid, userName)
           userLeads[psid].waitingForName = false;
-          console.log("Nombre recibido y guardado para PSID ", psid, ": ",userName);
+          console.log("Nombre recibido y guardado para PSID", psid, ": ", userName);
+
         }
       }
     }
