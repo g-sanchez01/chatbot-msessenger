@@ -2,59 +2,20 @@ import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
 import { parseLead } from "../services/leadParserService.js";
 
-const userLeads = {}; // estado por PSID
+const userLeads = {}; // estado por PSID (id usuario)
 
 export async function handleWebhook(req, res) {
   try {
-    const entries = req.body.entry || [];
+    const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
+    console.log("Grupo de Eventos: ", entries)
 
-    for (const entry of entries) {
-      const events = entry.messaging || entry.standby || [];
-
-      for (const event of events) {
-        if (!event.message || !event.message.text) continue;
-
-        const psid = event.sender.id;
-        const text = event.message.text.trim();
-
-        // Inicializar estado del usuario si no existe
-        if (!userLeads[psid]) {
-          userLeads[psid] = {
-            lead: new Lead(),
-            waitingFor: null // solo espera lo que pregunte la IA
-          };
-        }
-
-        const estadoUsuario = userLeads[psid];
-        const lead = estadoUsuario.lead;
-
-        // 1️⃣ Detectar la pregunta de la IA
-        if (event.message.is_echo) { // mensaje de la IA
-          if (text.toLowerCase().includes("nombre")) {
-            estadoUsuario.waitingFor = "nombre";
-            console.log("IA preguntó por el nombre");
-          }
-          continue; // no procesamos la respuesta
-        }
-
-        // 2️⃣ Guardar la respuesta del usuario solo si la IA preguntó
-        if (estadoUsuario.waitingFor === "nombre") {
-          const nombre = parseLead(text, "nombre");
-          if (nombre) {
-            lead.nombre = nombre;
-            console.log("Nombre guardado:", nombre);
-
-            // Guardar en Sheets
-            await saveLeadToSheets(lead);
-
-            // Limpiar estado
-            delete userLeads[psid];
-          } else {
-            console.log("No se detectó un nombre válido:", text);
-          }
-        }
-      }
+    // Itera sobre cada entry en el webhook.
+    for (const entry of entries) { // Cada entry puede contener varios eventos de mensajes o interacciones.
+      // Dentro de cada entry, buscamos los eventos de mensajería
+      const events = entry.messaging || entry.standby || []; // messaging → mensajes activos que envía o recibe la página. standby → eventos que están en espera (por ejemplo cuando hay otra IA conectada).
+      console.log("Tipo de evento de mensajeria ", events)
     }
+
 
     res.sendStatus(200);
   } catch (error) {
