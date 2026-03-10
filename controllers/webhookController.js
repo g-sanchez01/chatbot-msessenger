@@ -34,21 +34,22 @@ export async function handleWebhook(req, res) {
         const mensajeParse = event.message.text.toLowerCase()
         console.log(mensajeParse)
 
-        // Detectar cuál es la pregunta de la IA por el contenido del mensaje
-        if (mensajeParse.includes("nombre")) {
-          estadoUsuario.waitingFor = "nombre";
-          console.log("IA preguntó por el nombre");
-          continue; // no procesamos la respuesta todavía
+       // Detectar pregunta de la IA
+        if (mensajeParse.includes("nombre") && event.message.is_echo) { 
+            // is_echo indica que el mensaje es de la IA (tu página/servicio) y no del usuario
+            estadoUsuario.waitingFor = "nombre";
+            console.log("IA preguntó por el nombre");
+            continue; // no procesamos respuesta todavía
         } else {
             console.log("La IA no pregunto por el nombre")
         }
 
-        // Solo guardar la respuesta si estamos esperando un dato
-        if (estadoUsuario.waitingFor === "nombre") {
-          lead.nombre = text;
-          console.log("Nombre guardado:", lead.nombre);
-          estadoUsuario.waitingFor = null;
-          await saveLeadToSheets(lead);
+        // Guardar la respuesta del usuario solo si estamos esperando nombre
+        if (estadoUsuario.waitingFor === "nombre" && !event.message.is_echo) {
+            estadoUsuario.lead.nombre = event.message.text.trim();
+            estadoUsuario.waitingFor = null; // ya no estamos esperando
+            console.log("Nombre del usuario guardado:", estadoUsuario.lead.nombre);
+            await saveLeadToSheets(estadoUsuario.lead);
         }
       }
     }
