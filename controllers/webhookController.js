@@ -1,9 +1,3 @@
-import { saveLeadToSheets } from "../services/sheetsService.js";
-import { Lead } from "../models/leadModel.js";
-import { getUserState, saveUserState } from "../db/firestoreService.js";
-import { saveMessage } from "../services/messageService.js";
-import { saveLead } from "../services/leadService.js";
-
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
