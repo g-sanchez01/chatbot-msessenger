@@ -26,7 +26,10 @@ export async function handleWebhook(req, res) {
        
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const aiMessageRead = event.message.is_echo // Lecutra de mensaje de la IA
+        const aiMessageRead = event.message.is_echo === true; // Lecutra de mensaje de la IA
+        const timestamp = event.timestamp
+
+        if (!psid) continue;
 
         // Inicializar memoria del usuario
         if (!userState[psid]) { // Si no existe todavía un estado guardado para este usuario…
@@ -37,7 +40,6 @@ export async function handleWebhook(req, res) {
           }
         }
 
-        const timestamp = event.timestamp
         const state = userState[psid]
 
         // ignorar eventos viejos
