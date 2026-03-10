@@ -1,3 +1,5 @@
+import { saveUserName } from "../services/leadService.js";
+
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
@@ -17,22 +19,23 @@ export async function handleWebhook(req, res) {
         const psid = event.sender.id;
         const text = event.message.text.trim();
         const aiMessageRead = event.message.is_echo
+        const aiMessageParse = text.toLowerCase()
 
         // Solo analizar mensajes de la IA (is_echo = true)
-        if (aiMessageRead) {
-          console.log("Mensaje de la IA detectado para PSID: ", psid, "Text: ", text,);
+        // Detectar cuando la IA pregunta por el nombre
+        if (aiMessageRead && aiMessageParse.includes("nombre")) {
+          console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
+          userLeads[psid] = { waitingForName: true };
+          continue;
+        }
 
-          const iaMessage = text.toLowerCase();
-          
-          if (iaMessage.includes("nombre")) {
-            console.log("La IA pregunto por el nombre")
-          }
-          else {
-            console.log("La IA aun no pregunro por el nombre")
-          }
 
-          continue
-
+        // Guardar el nombre cuando el usuario responda
+        if (userLeads[psid]?.waitingForName) {
+          const userName = text;
+          await saveUserName(psid, userName);
+          userLeads[psid].waitingForName = false;
+          console.log("Nombre recibido y guardado para PSID ", psid, ": ",userName);
         }
       }
     }
