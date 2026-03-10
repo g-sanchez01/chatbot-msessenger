@@ -9,6 +9,20 @@ export async function handleWebhook(req, res) {
   console.log ("Ejecutando handleWebhook...")
 
   try {
+    const entries = req.body.entry || [];
+
+    for (const entry of entries ) {
+      const messaging = entry.messaging || [];
+
+      for (const event of messaging) {
+        if (!event.message || !event.message.text) continue;
+
+        const psid = event.sender.id;
+        const text = event.message.text;
+
+        console.log("PSID: " , psid, "Text: ", text)
+      }
+    }
     
   } catch (error) {
     console.error("Error en webhook:", error);
