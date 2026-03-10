@@ -1,8 +1,3 @@
-import { db } from "../db/firestore.js"
-import { saveUserName } from "../services/leadService.js";
-
-//const userLeads = {}; // estado por PSID
-
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log("Ejecutando handleWebhook...");
@@ -18,32 +13,23 @@ export async function handleWebhook(req, res) {
 
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const isAIMessage = !!event.message.is_echo;
+        const aiMessageRead = event.message.is_echo
 
-        const userRef = db.collection("users").doc(psid);
-        const userDoc = await userRef.get();
-        const waitingForName = userDoc.exists ? userDoc.data().waitingForName : false;
+        // Solo analizar mensajes de la IA (is_echo = true)
+        if (aiMessageRead) {
+          console.log("Mensaje de la IA detectado para PSID: ", psid, "Text: ", text,);
 
-        // --- Detectar cuando la IA pregunta por el nombre ---
-        if (isAIMessage && text.toLowerCase().includes("nombre")) {
-          console.log("La IA preguntó por el nombre. Marcando usuario como esperando nombre...");
-          // Guardar en Firestore que el usuario debe enviar su nombre
-          await userRef.set({ waitingForName: true }, { merge: true });
-          continue; // ya no procesamos más este mensaje
-        }
+          const iaMessage = text.toLowerCase();
+          
+          if (iaMessage.includes("nombre")) {
+            console.log("La IA pregunto por el nombre")
+          }
+          else {
+            console.log("La IA aun no pregunro por el nombre")
+          }
 
-        // --- Mensaje del usuario real ---
-        if (!isAIMessage && waitingForName) {
-          // Extraer solo el nombre
-          let userName = text;
-          const match = text.match(/mi nombre es (\w+)/i);
-          if (match) userName = match[1];
-          else userName = text.split(" ")[0]; // fallback
+          continue
 
-          // Guardar nombre en Firestore y quitar waitingForName
-          console.log(`Guardando nombre para PSID ${psid}: ${userName}`);
-          await saveUserName(psid, userName);
-          await userRef.set({ waitingForName: false }, { merge: true });
         }
       }
     }
