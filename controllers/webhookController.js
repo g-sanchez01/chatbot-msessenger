@@ -24,13 +24,24 @@ export async function handleWebhook(req, res) {
        
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const aiMessage = event.message.is_echo // Lecutra de mensaje de la IA
+        const aiMessageRead = event.message.is_echo // Lecutra de mensaje de la IA
 
         //console.log("PSID: ", psid, "Mensaje recibido: ", text)
 
         // Solo analizar mensajes de la IA (is_echo = true)
-        if (aiMessage) {
+        if (aiMessageRead) {
           console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
+
+          const aiMessage = text.toLowerCase(); // Parseamos el mensaje de la IA
+
+          // Detecta que tipo de pregunta hizo la IA segun la palabra clave
+          if ( aiMessage.includes("nombre") ) {
+            console.log("La IA pregunto por el nombre al usuario");
+          } else {
+            console.log("La IA no ha preguntado aun por el nombre");
+          }
+
+
         }
       }
     }
