@@ -28,9 +28,13 @@ export async function handleWebhook(req, res) {
         const psid = event.sender?.id;
         const text = event.message.text.trim();
 <<<<<<< HEAD
+<<<<<<< HEAD
         const mid = event.message.mid;
         const timestamp = event.timestamp || Date.now();
         const aiMessageRead = event.message.is_echo === true;
+=======
+        const aiMessage = event.message.is_echo // Lecutra de mensaje de la IA
+>>>>>>> parent of 3777b72 (Update webhookController.js)
 =======
         const aiMessage = event.message.is_echo // Lecutra de mensaje de la IA
 >>>>>>> parent of 3777b72 (Update webhookController.js)
@@ -55,6 +59,7 @@ export async function handleWebhook(req, res) {
 
         // Solo analizar mensajes de la IA (is_echo = true)
 <<<<<<< HEAD
+<<<<<<< HEAD
         if (aiMessageRead) {
           console.log("Mensaje de IA detectado:", text);
 
@@ -75,6 +80,10 @@ export async function handleWebhook(req, res) {
 
           await saveUserState(psid, state);
           continue
+=======
+        if (aiMessage) {
+          console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
+>>>>>>> parent of 3777b72 (Update webhookController.js)
 =======
         if (aiMessage) {
           console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
