@@ -28,8 +28,17 @@ export async function handleWebhook(req, res) {
         const text = event.message.text.trim();
         const aiMessageRead = event.message.is_echo === true; // Lecutra de mensaje de la IA
         const timestamp = event.timestamp
+        const mid = event.message.mid
 
-        if (!psid) continue;
+        if (!psid || !mid) continue; // Si no existe psid salta al siguiente.
+
+        // EVITAR DUPLICADOS
+        if (processedMessages.has(mid)) {
+          console.log("Mensaje duplicado ignorado:", mid);
+          continue;
+        }
+
+        processedMessages.add(mid);
 
         // Inicializar memoria del usuario
         if (!userState[psid]) { // Si no existe todavía un estado guardado para este usuario…
@@ -43,7 +52,7 @@ export async function handleWebhook(req, res) {
         const state = userState[psid]
 
         // ignorar eventos viejos
-        if (timestamp <= state.lastTimestamp) {
+        /*if (timestamp <= state.lastTimestamp) {
           console.log("Evento antiguo ignorado:", timestamp);
           continue;
         }
@@ -51,7 +60,7 @@ export async function handleWebhook(req, res) {
         // actualizar ultimo evento procesado
         state.lastTimestamp = timestamp;
 
-        //console.log("PSID: ", psid, "Mensaje recibido: ", text)
+        //console.log("PSID: ", psid, "Mensaje recibido: ", text)*/
 
         // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessageRead) {
