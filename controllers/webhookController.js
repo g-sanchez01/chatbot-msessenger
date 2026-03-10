@@ -56,8 +56,10 @@ export async function handleWebhook(req, res) {
 
         // Respuesta del Usuario
         console.log("Usuario respondio", text)
+        const estadoEsperado = state.waitingFor
+        console.log("Estado Esperado del Usuario: ", estadoEsperado)
 
-        if (state.waitingFor === "nombre") {
+        if (estadoEsperado === "nombre") {
           state.nombre = text;
           state.waitingFor = null;
 
