@@ -27,7 +27,7 @@ export async function handleWebhook(req, res) {
         const psid = event.sender.id;
         const text = event.message.text.trim();
         const aiMessageRead = event.message.is_echo === true; // Lecutra de mensaje de la IA
-        const timestamp = event.timestamp
+        const timestamp = event.timestamp || Date.now();
         const mid = event.message.mid
 
         if (!psid || !mid) continue; // Si no existe psid salta al siguiente.
