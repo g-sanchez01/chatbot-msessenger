@@ -19,7 +19,9 @@ export async function handleWebhook(req, res) {
       for (const event of events) { // Cada event puede ser un mensaje del usuario, de la IA, o un sistema (echo, delivery, postback, etc.).
         
         if (!event.message || !event.message.text) continue; // Ignora cualquier evento que no tenga un mensaje o que el mensaje no tenga texto.
-        console.log("Envio mensaje: ", events.sender?.id, "Recibio le mensaje: ", events.recipient?.id)
+        
+        console.log("Envió mensaje:",event.sender?.id,"Recibió el mensaje:",event.recipient?.id);  
+       
         const psid = event.sender.id;
         const text = event.message.text.trim();
 
