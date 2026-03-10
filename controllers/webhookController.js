@@ -7,6 +7,7 @@ const userState = {}; // estado por PSID (id usuario)
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
+
   try {
     const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
     //console.log("Grupo de Eventos: ", entries.standby)
@@ -31,11 +32,22 @@ export async function handleWebhook(req, res) {
         if (!userState[psid]) { // Si no existe todavía un estado guardado para este usuario…
           userState[psid] = {
             waitingFor: null, // Qué dato está esperando la IA (nombre, teléfono, etc.)
-            nombre: null // El nombre que el usuario ya proporcionó
+            nombre: null, // El nombre que el usuario ya proporcionó
+            lastTimestamp: 0
           }
         }
 
+        const timestamp = event.timestamp
         const state = userState[psid]
+
+        // ignorar eventos viejos
+        if (timestamp <= state.lastTimestamp) {
+          console.log("Evento antiguo ignorado:", timestamp);
+          continue;
+        }
+
+        // actualizar ultimo evento procesado
+        state.lastTimestamp = timestamp;
 
         //console.log("PSID: ", psid, "Mensaje recibido: ", text)
 
