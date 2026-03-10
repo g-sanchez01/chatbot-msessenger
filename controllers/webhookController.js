@@ -5,7 +5,7 @@ import { saveUserName } from "../services/leadService.js";
 
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
-  console.log ("Ejecutando handleWebhook...")
+  console.log("Ejecutando handleWebhook...");
 
   try {
     const entries = req.body.entry || [];
@@ -14,45 +14,39 @@ export async function handleWebhook(req, res) {
       const events = entry.messaging || entry.standby || [];
 
       for (const event of events) {
-        // Ignorar eventos sin mensaje o sin texto
         if (!event.message || !event.message.text) continue;
 
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        const aiMessageRead = event.message.is_echo
-        const aiMessageParse = text.toLowerCase()
+        const isAIMessage = !!event.message.is_echo;
 
         const userRef = db.collection("users").doc(psid);
         const userDoc = await userRef.get();
-        const waitingForName = userDoc.exists && userDoc.data().waitingForName;
+        const waitingForName = userDoc.exists ? userDoc.data().waitingForName : false;
 
-        // Detectar cuando la IA pregunta por el nombre
-        if (aiMessageRead && aiMessageParse.includes("nombre")) {
-          console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
+        // --- Detectar cuando la IA pregunta por el nombre ---
+        if (isAIMessage && text.toLowerCase().includes("nombre")) {
+          console.log("La IA preguntó por el nombre. Marcando usuario como esperando nombre...");
+          // Guardar en Firestore que el usuario debe enviar su nombre
           await userRef.set({ waitingForName: true }, { merge: true });
-          continue;
-
-        } else {
-          console.log("IA aun no pregunta el nombre")
+          continue; // ya no procesamos más este mensaje
         }
 
-        // Mensaje del usuario real
-        if(!aiMessageRead && waitingForName) {
-          // Extraer solo el nombre (primer palabra o usando "mi nombre es...")
+        // --- Mensaje del usuario real ---
+        if (!isAIMessage && waitingForName) {
+          // Extraer solo el nombre
           let userName = text;
           const match = text.match(/mi nombre es (\w+)/i);
           if (match) userName = match[1];
-          else userName = text.split(" ")[0]; // fallback: primera palabra
+          else userName = text.split(" ")[0]; // fallback
 
-          // Guardar en Firestore
-          await saveUserName(psid, userName)
+          // Guardar nombre en Firestore y quitar waitingForName
+          console.log(`Guardando nombre para PSID ${psid}: ${userName}`);
+          await saveUserName(psid, userName);
           await userRef.set({ waitingForName: false }, { merge: true });
-          console.log("Nombre recibido y guardado para PSID", psid, ": ", userName);
-
         }
       }
     }
-
   } catch (error) {
     console.error("Error en webhook:", error);
   }
