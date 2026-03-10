@@ -1,4 +1,4 @@
-import { db } from "./firestoreService.js";
+import { db } from "../db/firestore.js";
 
 export async function saveUserName(psid, name) {
   try {
