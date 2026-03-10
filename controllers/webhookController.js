@@ -69,46 +69,9 @@ export async function handleWebhook(req, res) {
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
-
-          await saveUserState(psid, state);
-          continue
-        if (aiMessage) {
-          console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
-        if (aiMessage) {
-          console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
-        }
-
-        // Respuesta del Usuario
-        console.log("Usuario respondio: ", text)
-
-        await saveMessage(psid, text, "user");
-
-        const estadoEsperado = state.waitingFor
-
-        console.log("Estado Esperado del Usuario: ", estadoEsperado)
-
-        if (estadoEsperado === "nombre") {
-
-          state.nombre = text;
-          state.waitingFor = null;
-
-          await saveUserState(psid, state);
-
-          console.log("Nombre guardado:", state.nombre);
-
-          const lead = new Lead(state.nombre, null, null);
-          lead.psid = psid;
-
-          await saveLead(lead);
-
-          await saveLeadToSheets(lead);
-
-        } else {
-          await saveUserState(psid, state);
-        }
-
+        } 
       }
-    } }}
+    }
   } catch (error) {
     console.error("Error en webhook:", error);
     //res.sendStatus(200);
