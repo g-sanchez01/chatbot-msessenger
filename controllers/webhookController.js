@@ -1,5 +1,6 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
+import { parseLead } from "../services/leadParserService.js";
 
 const userLeads = {}; // estado por PSID
 
@@ -15,37 +16,42 @@ export async function handleWebhook(req, res) {
 
         const psid = event.sender.id;
         const text = event.message.text.trim();
-        console.log("PSID:", psid);
-        console.log("Mensaje recibido:", text);
 
-        // Inicializar estado del usuario
+        // Inicializar estado del usuario si no existe
         if (!userLeads[psid]) {
           userLeads[psid] = {
             lead: new Lead(),
-            waitingFor: null // No esperamos nada hasta que la IA haga la pregunta
+            waitingFor: null // solo espera lo que pregunte la IA
           };
         }
 
         const estadoUsuario = userLeads[psid];
         const lead = estadoUsuario.lead;
-        const mensajeParse = text.toLowerCase();
 
-        // Regex para detectar las preguntas de la IA
-        const preguntaNombre = /cu(á|a)l es tu nombre/i;
-
-        // 1️⃣ Detectar la pregunta de la IA y marcar lo que estamos esperando
-        if (preguntaNombre.test(mensajeParse)) {
-          estadoUsuario.waitingFor = "nombre";
-          console.log("IA preguntó por el nombre");
-          continue; // no procesamos la respuesta todavía
+        // 1️⃣ Detectar la pregunta de la IA
+        if (event.message.is_echo) { // mensaje de la IA
+          if (text.toLowerCase().includes("nombre")) {
+            estadoUsuario.waitingFor = "nombre";
+            console.log("IA preguntó por el nombre");
+          }
+          continue; // no procesamos la respuesta
         }
 
-        // 2️⃣ Guardar la respuesta del usuario solo si estamos esperando ese dato
+        // 2️⃣ Guardar la respuesta del usuario solo si la IA preguntó
         if (estadoUsuario.waitingFor === "nombre") {
-          lead.nombre = text;
-          estadoUsuario.waitingFor = null;
-          console.log("Nombre del usuario guardado:", lead.nombre);
-          await saveLeadToSheets(lead);
+          const nombre = parseLead(text, "nombre");
+          if (nombre) {
+            lead.nombre = nombre;
+            console.log("Nombre guardado:", nombre);
+
+            // Guardar en Sheets
+            await saveLeadToSheets(lead);
+
+            // Limpiar estado
+            delete userLeads[psid];
+          } else {
+            console.log("No se detectó un nombre válido:", text);
+          }
         }
       }
     }
@@ -53,14 +59,12 @@ export async function handleWebhook(req, res) {
     res.sendStatus(200);
   } catch (error) {
     console.error("Error en webhook:", error);
-    res.sendStatus(200); // siempre responder 200 a Meta
+    res.sendStatus(200);
   }
 }
 
-// Verificación de webhook de Meta
+// Verificación de webhook
 export function verifyWebhook(req, res) {
-  console.log("Verificando Webhook...");
-
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
@@ -68,7 +72,6 @@ export function verifyWebhook(req, res) {
 
   if (mode && token) {
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("Webhook verificado!");
       res.status(200).send(challenge);
     } else {
       res.sendStatus(403);
