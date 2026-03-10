@@ -1,10 +1,7 @@
-import { db } from "./firestoreService.js";
+import { db } from "../db/firestoreService.js";
 
 export async function saveLead(lead) {
   await db.collection("leads").add({
-    nombre: lead.nombre,
-    telefono: lead.telefono,
-    interes: lead.interes,
-    timestamp: Date.now()
+    nombre: lead.nombre
   });
 }

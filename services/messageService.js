@@ -1,4 +1,4 @@
-import { db } from "./firestoreService.js";
+import { db } from "../db/firestoreService.js";
 
 export async function saveMessage(psid, text, role) {
   await db.collection("messages").add({

@@ -1,6 +1,6 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { Lead } from "../models/leadModel.js";
-import { getUserState, saveUserState } from "../services/firestoreService.js";
+import { getUserState, saveUserState } from "../db/firestoreService.js";
 import { saveMessage } from "../services/messageService.js";
 import { saveLead } from "../services/leadService.js";
 
@@ -23,7 +23,7 @@ export async function handleWebhook(req, res) {
         console.log("PSID: " , psid, "Text: ", text)
       }
     }
-    
+
   } catch (error) {
     console.error("Error en webhook:", error);
   }
@@ -31,7 +31,6 @@ export async function handleWebhook(req, res) {
 
 // Verificación de webhook
 export function verifyWebhook(req, res) {
-  //console.log ("Ejecutando verifyWebhook...")
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
