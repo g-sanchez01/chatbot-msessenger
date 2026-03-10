@@ -7,6 +7,7 @@ export async function handleWebhook(req, res) {
 
     for (const entry of entries ) {
       const messaging = entry.messaging || [];
+      console.log(messaging)
 
       for (const event of messaging) {
         if (!event.message || !event.message.text) continue;
