@@ -47,6 +47,7 @@ export async function handleWebhook(req, res) {
           // Detecta que tipo de pregunta hizo la IA segun la palabra clave
           if ( aiMessage.includes("nombre") ) {
             console.log("La IA pregunto por el nombre al usuario");
+            state.waitingFor = "nombre";
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
