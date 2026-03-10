@@ -14,13 +14,12 @@ export async function handleWebhook(req, res) {
     for (const entry of entries) { // Cada entry puede contener varios eventos de mensajes o interacciones.
       // Dentro de cada entry, buscamos los eventos de mensajería
       const events = entry.messaging || entry.standby || []; // messaging → mensajes activos que envía o recibe la página. standby → eventos que están en espera (por ejemplo cuando hay otra IA conectada).
-      console.log("Envio mensaje: ", events.sender, "Recibio le mensaje: ", events.recipient)
 
       // Itera sobre cada evento dentro de esa entry.
       for (const event of events) { // Cada event puede ser un mensaje del usuario, de la IA, o un sistema (echo, delivery, postback, etc.).
         
         if (!event.message || !event.message.text) continue; // Ignora cualquier evento que no tenga un mensaje o que el mensaje no tenga texto.
-
+        console.log("Envio mensaje: ", events.sender?.id, "Recibio le mensaje: ", events.recipient?.id)
         const psid = event.sender.id;
         const text = event.message.text.trim();
 
