@@ -1,10 +1,10 @@
 import { saveUserName } from "../services/leadService.js";
 
+const userLeads = {}; // estado por PSID
+
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
-
-  const userLeads = {}; // estado por PSID
 
   try {
     const entries = req.body.entry || [];
@@ -26,9 +26,11 @@ export async function handleWebhook(req, res) {
         if (aiMessageRead && aiMessageParse.includes("nombre")) {
           console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
           userLeads[psid] = { waitingForName: true };
+          console.log(userLeads[psid])
           continue;
+        } else {
+          console.log("IA aun no pregunta el nombre")
         }
-
 
         // Guardar el nombre cuando el usuario responda
         if (userLeads[psid]?.waitingForName) {
