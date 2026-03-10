@@ -16,13 +16,13 @@ export async function handleWebhook(req, res) {
         const psid = event.sender.id;
         const text = event.message.text.trim();
         console.log("PSID:", psid);
-        console.log("Mensaje:", text);
+        console.log("Mensaje recibido:", text);
 
-        // inicializar estado del usuario
+        // Inicializar estado del usuario
         if (!userLeads[psid]) {
           userLeads[psid] = {
             lead: new Lead(),
-            waitingFor: null
+            waitingFor: null // No esperamos nada hasta que la IA haga la pregunta
           };
         }
 
@@ -30,17 +30,17 @@ export async function handleWebhook(req, res) {
         const lead = estadoUsuario.lead;
         const mensajeParse = text.toLowerCase();
 
-        // 1️⃣ Detectar mensaje de la IA (echo = true)
-        if (event.message.is_echo) {
-          if (mensajeParse.includes("nombre")) {
-            estadoUsuario.waitingFor = "nombre";
-            console.log("IA preguntó por el nombre");
-          }
-          // aquí podrías hacer lo mismo para "teléfono" o "ciudad"
+        // Regex para detectar las preguntas de la IA
+        const preguntaNombre = /cu(á|a)l es tu nombre/i;
+
+        // 1️⃣ Detectar la pregunta de la IA y marcar lo que estamos esperando
+        if (preguntaNombre.test(mensajeParse)) {
+          estadoUsuario.waitingFor = "nombre";
+          console.log("IA preguntó por el nombre");
           continue; // no procesamos la respuesta todavía
         }
 
-        // 2️⃣ Guardar la respuesta del usuario solo si estamos esperando algo
+        // 2️⃣ Guardar la respuesta del usuario solo si estamos esperando ese dato
         if (estadoUsuario.waitingFor === "nombre") {
           lead.nombre = text;
           estadoUsuario.waitingFor = null;
@@ -53,25 +53,25 @@ export async function handleWebhook(req, res) {
     res.sendStatus(200);
   } catch (error) {
     console.error("Error en webhook:", error);
-    res.sendStatus(200);
+    res.sendStatus(200); // siempre responder 200 a Meta
   }
 }
 
-// Para verificación de webhook de Meta
+// Verificación de webhook de Meta
 export function verifyWebhook(req, res) {
-    console.log("Verificando Webhook...")
+  console.log("Verificando Webhook...");
 
-    const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+  const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-    if (mode && token) {
-        if (mode === "subscribe" && token === VERIFY_TOKEN) {
-            console.log("Webhook verificado!");
-            res.status(200).send(challenge);
-        } else {
-            res.sendStatus(403);
-        }
+  if (mode && token) {
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      console.log("Webhook verificado!");
+      res.status(200).send(challenge);
+    } else {
+      res.sendStatus(403);
     }
+  }
 }
