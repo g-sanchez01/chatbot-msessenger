@@ -3,6 +3,7 @@ import { Lead } from "../models/leadModel.js";
 import { parseLead } from "../services/leadParserService.js";
 
 const userState = {}; // estado por PSID (id usuario)
+const processedMessages = new Set();
 
 export async function handleWebhook(req, res) {
   res.sendStatus(200);
@@ -52,7 +53,7 @@ export async function handleWebhook(req, res) {
         const state = userState[psid]
 
         // ignorar eventos viejos
-        /*if (timestamp <= state.lastTimestamp) {
+        if (timestamp <= state.lastTimestamp) {
           console.log("Evento antiguo ignorado:", timestamp);
           continue;
         }
