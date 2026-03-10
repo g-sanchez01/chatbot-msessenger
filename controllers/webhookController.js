@@ -15,6 +15,7 @@ export async function handleWebhook(req, res) {
       // Dentro de cada entry, buscamos los eventos de mensajería
       const events = entry.messaging || entry.standby || []; // messaging → mensajes activos que envía o recibe la página. standby → eventos que están en espera (por ejemplo cuando hay otra IA conectada).
       console.log("Tipo de evento de mensajeria ", events)
+      await sleep(300);
     }
 
 
