@@ -21,6 +21,18 @@ export async function handleWebhook(req, res) {
         // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessageRead) {
           console.log("Mensaje de la IA detectado para PSID: ", psid, "Text: ", text,);
+
+          const iaMessage = text.toLowerCase();
+          
+          if (iaMessage.includes("nombre")) {
+            console.log("La IA pregunto por el nombre")
+          }
+          else {
+            console.log("La IA aun no pregunro por el nombre")
+          }
+
+          continue
+
         }
       }
     }
