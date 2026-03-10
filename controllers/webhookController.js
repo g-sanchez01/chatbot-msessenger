@@ -73,13 +73,15 @@ export async function handleWebhook(req, res) {
           if ( aiMessage.includes("nombre") ) {
             console.log("La IA pregunto por el nombre al usuario");
             state.waitingFor = "nombre";
+            estadoEsperado = state.waitingFor
+            console.log("Estado esperado: ", estadoEsperado)
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
           continue
         }
 
-        // Respuesta del Usuario
+        /*// Respuesta del Usuario
         console.log("Usuario respondio: ", text)
         const estadoEsperado = state.waitingFor
         console.log("Estado Esperado del Usuario: ", estadoEsperado)
@@ -89,7 +91,7 @@ export async function handleWebhook(req, res) {
           state.waitingFor = null;
 
           console.log("Nombre guardado", state.nombre)
-        }
+        }*/
 
 
       }
