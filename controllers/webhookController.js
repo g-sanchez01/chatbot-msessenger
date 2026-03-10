@@ -5,6 +5,7 @@ import { parseLead } from "../services/leadParserService.js";
 const userLeads = {}; // estado por PSID (id usuario)
 
 export async function handleWebhook(req, res) {
+  console.log ("Ejecutando handleWebhook...")
   try {
     const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
     console.log("Grupo de Eventos: ", entries)
@@ -26,6 +27,7 @@ export async function handleWebhook(req, res) {
 
 // Verificación de webhook
 export function verifyWebhook(req, res) {
+  console.log ("Ejecutando verifyWebhook...")
   const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
