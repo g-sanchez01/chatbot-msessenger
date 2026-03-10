@@ -30,7 +30,6 @@ export async function handleWebhook(req, res) {
         if (aiMessageRead && aiMessageParse.includes("nombre")) {
           console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
           await userRef.set({ waitingForName: true }, { merge: true });
-          console.log(userLeads[psid])
           continue;
 
         } else {
