@@ -2,20 +2,26 @@ export async function handleWebhook(req, res) {
   res.sendStatus(200);
   console.log ("Ejecutando handleWebhook...")
 
+  const userLeads = {}; // estado por PSID
+
   try {
     const entries = req.body.entry || [];
 
-    for (const entry of entries ) {
-      const messaging = entry.messaging || [];
-      console.log(messaging)
+    for (const entry of entries) {
+      const events = entry.messaging || entry.standby || [];
 
-      for (const event of messaging) {
+      for (const event of events) {
+        // Ignorar eventos sin mensaje o sin texto
         if (!event.message || !event.message.text) continue;
 
         const psid = event.sender.id;
-        const text = event.message.text;
+        const text = event.message.text.trim();
+        const aiMessageRead = event.message.is_echo
 
-        console.log("PSID: " , psid, "Text: ", text)
+        // Solo analizar mensajes de la IA (is_echo = true)
+        if (aiMessageRead) {
+          console.log("Mensaje de la IA detectado para PSID: ", psid, "Text: ", text,);
+        }
       }
     }
 
