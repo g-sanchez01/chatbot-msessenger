@@ -11,7 +11,6 @@ export async function handleWebhook(req, res) {
 
   try {
     const entries = req.body.entry || []; // son los grupos de eventos que Meta envía.
-    //console.log("Grupo de Eventos: ", entries.standby)
 
     // Itera sobre cada entry en el webhook.
     for (const entry of entries) { // Cada entry puede contener varios eventos de mensajes o interacciones.
@@ -25,11 +24,11 @@ export async function handleWebhook(req, res) {
         
         //console.log("Envió mensaje:", event.sender?.id, "Recibió el mensaje:", event.recipient?.id);  
        
-        const psid = event.sender.id;
+        const psid = event.sender?.id;
         const text = event.message.text.trim();
-        const aiMessageRead = event.message.is_echo === true; // Lecutra de mensaje de la IA
+        const mid = event.message.mid;
         const timestamp = event.timestamp || Date.now();
-        const mid = event.message.mid
+        const aiMessageRead = event.message.is_echo === true;
 
         if (!psid || !mid) continue; // Si no existe psid salta al siguiente.
 
@@ -57,42 +56,43 @@ export async function handleWebhook(req, res) {
           console.log("Evento antiguo ignorado:", timestamp);
           continue;
         }
-
-        // actualizar ultimo evento procesado
-        state.lastTimestamp = timestamp;
+        state.lastTimestamp = timestamp; // actualizar ultimo evento procesado
 
         //console.log("PSID: ", psid, "Mensaje recibido: ", text)*/
 
         // Solo analizar mensajes de la IA (is_echo = true)
         if (aiMessageRead) {
-          console.log("Mensaje de la IA detectado para PSID:",psid , "mensaje: ",text)
+          console.log("Mensaje de IA detectado:", text);
 
           const aiMessage = text.toLowerCase(); // Parseamos el mensaje de la IA
 
           // Detecta que tipo de pregunta hizo la IA segun la palabra clave
-          if ( aiMessage.includes("nombre") ) {
+          if (aiMessage.includes("nombre")) {
             console.log("La IA pregunto por el nombre al usuario");
+
             state.waitingFor = "nombre";
-            estadoEsperado = state.waitingFor
-            console.log("Estado esperado: ", estadoEsperado)
+
+            console.log("Estado actualizado:", state.waitingFor);
           } else {
             console.log("La IA no ha preguntado aun por el nombre");
           }
           continue
         }
 
-        /*// Respuesta del Usuario
+        // Respuesta del Usuario
         console.log("Usuario respondio: ", text)
+
         const estadoEsperado = state.waitingFor
+
         console.log("Estado Esperado del Usuario: ", estadoEsperado)
 
         if (estadoEsperado === "nombre") {
+
           state.nombre = text;
           state.waitingFor = null;
 
           console.log("Nombre guardado", state.nombre)
-        }*/
-
+        }
 
       }
     }
