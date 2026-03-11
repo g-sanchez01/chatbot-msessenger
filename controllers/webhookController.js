@@ -33,6 +33,8 @@ export async function handleWebhook(req, res) {
         // Guardar el nombre cuando el usuario responda
         if (userLeads[psid]?.waitingForName) {
           const userName = text;
+          console.log("Usuario escribio: ", userName)
+          
           await saveUserName(psid, userName);
           userLeads[psid].waitingForName = false;
           console.log("Nombre recibido y guardado para el candidato PSID ", psid, ": ",userName);
