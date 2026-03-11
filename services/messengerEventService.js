@@ -101,7 +101,7 @@ export async function processMessengerEvent(event) {
     }
 
 
-    if (state.nombre && state.telefono && state.localidad) {
+    if (state.nombre && state.telefono && state.localidad && !state.leadSaved) {
 
         await saveLeadToSheets({
             psid,
@@ -109,6 +109,10 @@ export async function processMessengerEvent(event) {
             telefono: state.telefono,
             localidad: state.localidad
         });
+
+        state.leadSaved = true;
+
+        await saveUserState(psid, state);
 
         console.log("Lead completo guardado en Sheets");
     }

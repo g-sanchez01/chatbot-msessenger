@@ -7,7 +7,8 @@ export class UserState {
         nombre = null,
         telefono = null,
         localidad = null,
-        lastTimestamp = 0
+        lastTimestamp = 0,
+        leadSaved = false
     } = {}) {
 
         this.waitingForName = waitingForName;
@@ -19,6 +20,8 @@ export class UserState {
         this.localidad = localidad;
 
         this.lastTimestamp = lastTimestamp;
+
+        this.leadSaved = leadSaved;
     }
 
 }

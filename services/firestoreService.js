@@ -27,7 +27,8 @@ export async function getUserState(psid) {
       telefono: null,
       localidad: null,
 
-      lastTimestamp: 0
+      lastTimestamp: 0,
+      leadSaved: false
     };
 
   } catch (error) {
@@ -43,7 +44,8 @@ export async function getUserState(psid) {
       telefono: null,
       localidad: null,
 
-      lastTimestamp: 0
+      lastTimestamp: 0,
+      leadSaved: false
     };
 
   }
