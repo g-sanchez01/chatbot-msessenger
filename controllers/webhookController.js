@@ -31,7 +31,7 @@ export async function handleWebhook(req, res) {
         }
         processedMessages.add(mid);
 
-        //console.log("PSID: ", psid, " escribio: ", text)
+        console.log("PSID: ", psid, " escribio: ", text)
 
         // Obtener estado desde Firestore
         let state = await getUserState(psid);
