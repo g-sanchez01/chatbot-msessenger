@@ -31,7 +31,7 @@ export async function handleWebhook(req, res) {
         }
         processedMessages.add(mid);
 
-        console.log("PSID: ", psid, " escribio: ", text)
+        //console.log("PSID: ", psid, " escribio: ", text)
 
         // Obtener estado desde Firestore
         let state = await getUserState(psid);
@@ -59,7 +59,7 @@ export async function handleWebhook(req, res) {
         }
 
 
-        console.log("Esperando mensaje del usuario PSID ", psid, "nombre: ", text)
+        console.log("Esperando mensaje del usuario PSID ", psid, "nombre: ", text, ", estado: ", state.waitingForName)
 
         // --- Respuesta del Usuario ---
         if (state.waitingForName && psid !== 111177551895213) {
