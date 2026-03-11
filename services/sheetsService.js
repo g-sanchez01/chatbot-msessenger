@@ -8,17 +8,29 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: "v4", auth });
 
 export async function saveLeadToSheets(lead) {
+
   try {
+
+    const values = [[
+      lead.psid || "",
+      lead.nombre || "",
+      lead.telefono || "",
+      lead.localidad || ""
+    ]];
+
     await sheets.spreadsheets.values.append({
       spreadsheetId: process.env.GOOGLE_SHEETS_ID,
       range: "Reclutamiento!A:D",
       valueInputOption: "RAW",
       resource: {
-        values: [[lead.nombre]],
-      },
+        values
+      }
     });
-    console.log("Lead guardado:", lead);
+
+    console.log("Lead guardado en Sheets:", values);
+
   } catch (error) {
     console.error("Error guardando lead:", error);
   }
+
 }
