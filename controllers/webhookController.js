@@ -1,7 +1,6 @@
 import { saveLeadToSheets } from "../services/sheetsService.js";
 import { getUserState, saveUserState } from "../services/firestoreService.js";
 
-const userLeads = {}; // estado por PSID
 const processedMessages = new Set();
 
 export async function handleWebhook(req, res) {
@@ -24,11 +23,11 @@ export async function handleWebhook(req, res) {
         const aiMessageRead = event.message.is_echo
         const aiMessageParse = text.toLowerCase();
 
-        if (!psid || !mid) return;
+        if (!psid || !mid) continue;
 
          // Evitar mensajes duplicados
         if (processedMessages.has(mid)) {
-          return;
+          continue;
         }
         processedMessages.add(mid);
 
@@ -36,12 +35,13 @@ export async function handleWebhook(req, res) {
 
         // Obtener estado desde Firestore
         let state = await getUserState(psid);
+
         if (!state) {
           state = { waitingForName: false, nombre: null, lastTimestamp: 0 };
         }
 
         // Ignorar mensajes antiguos
-        if (timestamp <= state.lastTimestamp) return;
+        if (timestamp <= state.lastTimestamp) continue;
         state.lastTimestamp = timestamp;
 
         // --- Mensaje de IA ---
@@ -50,29 +50,28 @@ export async function handleWebhook(req, res) {
             console.log(`IA preguntó por el nombre. PSID: ${psid}`);
             
             // Marcar en memoria y Firestore que estamos esperando el nombre
-            userLeads[psid] = { waitingForName: true };
             state.waitingForName = true;
             await saveUserState(psid, state);
+
+            console.log("Estado actualizado en Firestore:", state);
           }
-          return; // No procesar como respuesta de usuario
+          continue; // No procesar como respuesta de usuario
         }
 
         console.log("Esperando mensaje del usuario...")
 
         // --- Respuesta del Usuario ---
-        if ((userLeads[psid]?.waitingForName || state.waitingForName) && psid !== 111177551895213) {
+        if (state.waitingForName && psid !== 111177551895213) {
           const userName = text;
+
           console.log("Usuario escribió su nombre:", userName, "PSID: ", psid);
 
           // Guardar el nombre en Firestore y Sheets
           state.nombre = userName;
           state.waitingForName = false;
+          
           await saveUserState(psid, state);
-          //await saveUserName(psid, userName);
-
-          // Limpiar la memoria temporal
-          if (userLeads[psid]) userLeads[psid].waitingForName = false;
-
+          //await saveUserName(psid: psid, nombre: userName);
           console.log("Nombre guardado para PSID", psid, ":", userName);
         }
       }
