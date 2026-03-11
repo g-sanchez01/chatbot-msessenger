@@ -24,50 +24,37 @@ export async function handleWebhook(req, res) {
         const aiMessageRead = event.message.is_echo
         const aiMessageParse = text.toLowerCase();
 
-        if (!psid || !mid) continue;
+        if (!psid || !mid) return;
 
          // Evitar mensajes duplicados
         if (processedMessages.has(mid)) {
-          continue;
+          return;
         }
-
         processedMessages.add(mid);
 
         console.log("PSID: ", psid, " escribio: ", text)
 
-        // Obtener estado del usuario desde Firestore
+        // Obtener estado desde Firestore
         let state = await getUserState(psid);
         if (!state) {
-          state = {
-            waitingForName: false,
-            nombre: null,
-            lastTimestamp: 0,
-          };
+          state = { waitingForName: false, nombre: null, lastTimestamp: 0 };
         }
 
-        // Ignorar eventos antiguos
-        if (timestamp <= state.lastTimestamp) {
-          console.log("Evento antiguo ignorado:", timestamp);
-          continue;
-        }
-
+        // Ignorar mensajes antiguos
+        if (timestamp <= state.lastTimestamp) return;
         state.lastTimestamp = timestamp;
 
         // --- Mensaje de IA ---
         if (aiMessageRead) {
           if (aiMessageParse.includes("nombre")) {
-            console.log("La IA preguntó por el nombre. Esperando respuesta del usuario...");
+            console.log(`IA preguntó por el nombre. PSID: ${psid}`);
             
             // Marcar en memoria y Firestore que estamos esperando el nombre
             userLeads[psid] = { waitingForName: true };
             state.waitingForName = true;
             await saveUserState(psid, state);
-
-            console.log("Estado actualizado en Firestore:", state);
-          } else {
-            console.log("IA aún no pregunta el nombre");
           }
-          continue; // No procesar como respuesta de usuario
+          return; // No procesar como respuesta de usuario
         }
 
         console.log("Esperando mensaje del usuario...")
@@ -75,18 +62,18 @@ export async function handleWebhook(req, res) {
         // --- Respuesta del Usuario ---
         if ((userLeads[psid]?.waitingForName || state.waitingForName) && psid !== 111177551895213) {
           const userName = text;
-          console.log("Usuario escribió su nombre:", userName);
+          console.log("Usuario escribió su nombre:", userName, "PSID: ", psid);
 
           // Guardar el nombre en Firestore y Sheets
           state.nombre = userName;
           state.waitingForName = false;
           await saveUserState(psid, state);
-          //await saveLeadToSheets({ psid, nombre: userName });
+          //await saveUserName(psid, userName);
 
           // Limpiar la memoria temporal
           if (userLeads[psid]) userLeads[psid].waitingForName = false;
 
-          console.log("Nombre recibido y guardado para PSID", psid, ":", userName);
+          console.log("Nombre guardado para PSID", psid, ":", userName);
         }
       }
     }
