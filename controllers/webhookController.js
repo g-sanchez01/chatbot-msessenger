@@ -16,7 +16,11 @@ export async function handleWebhook(req, res) {
       for (const event of events) {
         if (!event.message || !event.message.text) continue;
 
-        const psid = event.sender.id;
+        const isEcho = event.message.is_echo;
+        const psid = isEcho
+          ? event.recipient.id   // cuando habla el bot, el usuario está en recipient
+          : event.sender.id;     // cuando habla el usuario, está en sender
+
         const text = event.message.text.trim();
         const mid = event.message.mid;
         const timestamp = event.timestamp || Date.now();
@@ -32,6 +36,9 @@ export async function handleWebhook(req, res) {
         processedMessages.add(mid);
 
         console.log("PSID: ", psid, " escribio: ", text)
+        console.log("sender:", event.sender.id);
+        console.log("recipient:", event.recipient.id);
+        console.log("is_echo:", event.message.is_echo);
 
         // Obtener estado desde Firestore
         let state = await getUserState(psid);
