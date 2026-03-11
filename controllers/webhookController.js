@@ -70,6 +70,8 @@ export async function handleWebhook(req, res) {
           continue; // No procesar como respuesta de usuario
         }
 
+        console.log("Esperando mensaje del usuario...")
+
         // --- Respuesta del Usuario ---
         if ((userLeads[psid]?.waitingForName || state.waitingForName) && psid !== 111177551895213) {
           const userName = text;
