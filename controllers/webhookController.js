@@ -35,10 +35,10 @@ export async function handleWebhook(req, res) {
         }
         processedMessages.add(mid);
 
-        console.log("PSID: ", psid, " escribio: ", text)
+        /*console.log("PSID: ", psid, " escribio: ", text)
         console.log("sender:", event.sender.id);
         console.log("recipient:", event.recipient.id);
-        console.log("is_echo:", event.message.is_echo);
+        console.log("is_echo:", event.message.is_echo);*/
 
         // Obtener estado desde Firestore
         let state = await getUserState(psid);
@@ -79,7 +79,7 @@ export async function handleWebhook(req, res) {
           state.waitingForName = false;
 
           await saveUserState(psid, state);
-          //await saveUserName(psid: psid, nombre: userName);
+          await saveUserName({psid: psid, nombre: userName});
           console.log("Nombre guardado para PSID", psid, ":", userName);
         }
       }
