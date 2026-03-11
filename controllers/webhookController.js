@@ -35,7 +35,7 @@ export async function handleWebhook(req, res) {
           const userName = text;
           await saveUserName(psid, userName);
           userLeads[psid].waitingForName = false;
-          console.log("Nombre recibido y guardado para PSID ", psid, ": ",userName);
+          console.log("Nombre recibido y guardado para el candidato PSID ", psid, ": ",userName);
         }
       }
     }
