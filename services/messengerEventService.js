@@ -39,6 +39,11 @@ export async function processMessengerEvent(event) {
     // --- Mensaje IA ---
     if (aiMessageRead) {
 
+        // Si el lead ya fue guardado, ignoramos cualquier nueva captura de datos
+        if (state.leadSaved) {
+            return;
+        }
+
         if (aiMessageParse.includes("nombre")) {
             console.log(`IA preguntó por el nombre. PSID: ${psid}`);
             state.waitingForName = true;
