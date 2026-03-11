@@ -58,7 +58,8 @@ export async function handleWebhook(req, res) {
           continue; // No procesar como respuesta de usuario
         }
 
-        console.log("Esperando mensaje del usuario...")
+
+        console.log("Esperando mensaje del usuario PSID ", psid, "nombre: ", text)
 
         // --- Respuesta del Usuario ---
         if (state.waitingForName && psid !== 111177551895213) {
@@ -69,7 +70,7 @@ export async function handleWebhook(req, res) {
           // Guardar el nombre en Firestore y Sheets
           state.nombre = userName;
           state.waitingForName = false;
-          
+
           await saveUserState(psid, state);
           //await saveUserName(psid: psid, nombre: userName);
           console.log("Nombre guardado para PSID", psid, ":", userName);
