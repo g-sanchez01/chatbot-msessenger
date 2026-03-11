@@ -79,7 +79,7 @@ export async function handleWebhook(req, res) {
           state.waitingForName = false;
 
           await saveUserState(psid, state);
-          await saveUserName({psid: psid, nombre: userName});
+          await saveLeadToSheets({psid: psid, nombre: userName});
           console.log("Nombre guardado para PSID", psid, ":", userName);
         }
       }
